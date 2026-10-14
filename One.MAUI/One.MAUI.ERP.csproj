@@ -1,0 +1,143 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+	<!-- =========================
+       General Project Settings
+       ========================= -->
+	<PropertyGroup>
+		<!-- Target frameworks:
+         IMPORTANT: لازم تكون كلها net10.0-* عشان تقدر تعمل ProjectReference لـ One.Shared اللي net10.0 -->
+		<TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
+
+		<!-- Add Windows TFM only when building on Windows OS -->
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">
+			$(TargetFrameworks);net10.0-windows10.0.19041.0
+		</TargetFrameworks>
+
+		<!-- Uncomment لو ناوي تبني Tizen (لازم تنزل tizen workload) -->
+		<!-- <TargetFrameworks>$(TargetFrameworks);net10.0-tizen</TargetFrameworks> -->
+
+		<!-- MacCatalyst runtime note:
+         default Debug: maccatalyst-x64
+         Release: ممكن يبقى x64 + arm64
+         لو محتاج الاتنين، استخدم RuntimeIdentifiers بدل RuntimeIdentifier -->
+		<!-- <RuntimeIdentifiers>maccatalyst-x64;maccatalyst-arm64</RuntimeIdentifiers> -->
+		<RuntimeIdentifiers Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+			maccatalyst-x64;maccatalyst-arm64
+		</RuntimeIdentifiers>
+
+		<!-- Enable compiler generated files output (useful for debugging source generators, etc.) -->
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+		<CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)Generated</CompilerGeneratedFilesOutputPath>
+
+		<!-- If you use secrets/keys accessor generation in project -->
+		<GenerateKeysAccessor>true</GenerateKeysAccessor>
+
+		<!-- .NET MAUI Single Project configuration -->
+		<OutputType>Exe</OutputType>
+		<RootNamespace>One.MAUI</RootNamespace>
+		<UseMaui>true</UseMaui>
+		<SingleProject>true</SingleProject>
+
+		<!-- C# project quality settings -->
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<NoWarn>$(NoWarn);NU1603;CA1416;CA1418</NoWarn>
+
+		<!-- Disable default css items (sometimes used when you manage CSS differently) -->
+		<EnableDefaultCssItems>false</EnableDefaultCssItems>
+
+		<!-- App display name -->
+		<ApplicationTitle>One ERP</ApplicationTitle>
+
+		<!-- App identifier / bundle id (must be unique for store builds) -->
+		<ApplicationId>com.companyname.one.maui.erp</ApplicationId>
+
+		<!-- App versioning -->
+		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+		<ApplicationVersion>1</ApplicationVersion>
+
+		<!-- Windows packaging: None = unpackaged (local) -->
+		<WindowsPackageType>None</WindowsPackageType>
+
+		<!-- Supported OS platform versions per target -->
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+			15.0
+		</SupportedOSPlatformVersion>
+
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+			15.0
+		</SupportedOSPlatformVersion>
+
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+			24.0
+		</SupportedOSPlatformVersion>
+
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+			10.0.17763.0
+		</SupportedOSPlatformVersion>
+
+		<!-- Windows minimum target platform versions -->
+		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+			10.0.17763.0
+		</TargetPlatformMinVersion>
+
+		<!-- Tizen supported version (only relevant if you enable tizen TFM) -->
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">
+			6.5
+		</SupportedOSPlatformVersion>
+	</PropertyGroup>
+
+	<!-- =========================
+       MAUI Resources
+       ========================= -->
+	<ItemGroup>
+		<!-- App Icon -->
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
+
+		<!-- Splash Screen -->
+		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
+
+		<!-- Images -->
+		<MauiImage Include="Resources\Images\*" />
+		<MauiImage Update="Resources\Images\dotnet_bot.svg" BaseSize="168,208" />
+
+		<!-- Fonts -->
+		<MauiFont Include="Resources\Fonts\*" />
+
+		<!-- Raw Assets -->
+		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<!-- =========================
+       NuGet Packages
+       ========================= -->
+	<ItemGroup>
+		<!-- SignalR client for realtime communication -->
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.1" />
+
+		<!-- Debug logging -->
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.1" />
+
+		<!-- MAUI UI controls + Blazor WebView (versions should match your installed MAUI workload) -->
+		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.20" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="10.0.20" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.1" />
+
+	</ItemGroup>
+
+	<!-- =========================
+       Project References
+       ========================= -->
+	<ItemGroup>
+		<!-- Shared utilities/contracts -->
+		<ProjectReference Include="..\One.Shared\One.Shared.csproj" />
+	</ItemGroup>
+
+	<!-- =========================
+       Folder structure (optional)
+       ========================= -->
+	<ItemGroup>
+		<Folder Include="Components\Purchases\" />
+	</ItemGroup>
+
+</Project>
