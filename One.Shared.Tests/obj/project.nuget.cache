@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "dgSpecHash": "51hFSRGhaTU=",
+  "success": false,
+  "projectFilePath": "D:\\OneERP\\One.Shared.Tests\\One.Shared.Tests.csproj",
+  "expectedPackageFiles": [],
+  "logs": [
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Shared.Tests\\One.Shared.Tests.csproj",
+      "filePath": "D:\\OneERP\\One.Shared.Tests\\One.Shared.Tests.csproj",
+      "libraryId": "xunit.runner.visualstudio",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Shared.Tests\\One.Shared.Tests.csproj",
+      "filePath": "D:\\OneERP\\One.Shared.Tests\\One.Shared.Tests.csproj",
+      "libraryId": "bunit",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Shared.Tests\\One.Shared.Tests.csproj",
+      "filePath": "D:\\OneERP\\One.Shared.Tests\\One.Shared.Tests.csproj",
+      "libraryId": "Microsoft.NET.Test.Sdk",
+      "targetGraphs": []
+    }
+  ]
+}
