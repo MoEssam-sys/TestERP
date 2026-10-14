@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>Lightweight wire contracts shared by the API, WebAssembly, and MAUI clients.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\One.Domain\Base\BaseFilter.cs" Link="Base\BaseFilter.cs" />
+    <Compile Include="..\One.Domain\Base\PagedResult.cs" Link="Base\PagedResult.cs" />
+    <Compile Include="..\One.Domain\Base\Result.cs" Link="Base\Result.cs" />
+    <Compile Include="..\One.Domain\Constants\**\*.cs" Link="Constants\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\One.Domain\DTOs\**\*.cs" Link="DTOs\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\One.Domain\Enums\**\*.cs" Link="Enums\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\One.Domain\Localization\**\*.cs" Link="Localization\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\One.Domain\Services\Attributes\**\*.cs" Link="Services\Attributes\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>
