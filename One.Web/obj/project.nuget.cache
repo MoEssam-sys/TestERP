@@ -1,0 +1,63 @@
+{
+  "version": 2,
+  "dgSpecHash": "Q8HTCvIVZ/w=",
+  "success": false,
+  "projectFilePath": "D:\\OneERP\\One.Web\\One.Web.csproj",
+  "expectedPackageFiles": [],
+  "logs": [
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Web\\One.Web.csproj",
+      "filePath": "D:\\OneERP\\One.Web\\One.Web.csproj",
+      "libraryId": "Microsoft.NET.Sdk.WebAssembly.Pack",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Web\\One.Web.csproj",
+      "filePath": "D:\\OneERP\\One.Web\\One.Web.csproj",
+      "libraryId": "Microsoft.AspNetCore.Components.WebAssembly",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Web\\One.Web.csproj",
+      "filePath": "D:\\OneERP\\One.Web\\One.Web.csproj",
+      "libraryId": "Microsoft.AspNetCore.App.Internal.Assets",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Web\\One.Web.csproj",
+      "filePath": "D:\\OneERP\\One.Web\\One.Web.csproj",
+      "libraryId": "Microsoft.NET.ILLink.Tasks",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Web\\One.Web.csproj",
+      "filePath": "D:\\OneERP\\One.Web\\One.Web.csproj",
+      "libraryId": "Microsoft.DotNet.HotReload.WebAssembly.Browser",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Web\\One.Web.csproj",
+      "filePath": "D:\\OneERP\\One.Web\\One.Web.csproj",
+      "libraryId": "Microsoft.AspNetCore.Components.WebAssembly.DevServer",
+      "targetGraphs": []
+    }
+  ]
+}
