@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "dgSpecHash": "VGtw0BjtizI=",
+  "success": false,
+  "projectFilePath": "D:\\OneERP\\OneSourceGen\\OneSourceGen.csproj",
+  "expectedPackageFiles": [],
+  "logs": [
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\OneSourceGen\\OneSourceGen.csproj",
+      "filePath": "D:\\OneERP\\OneSourceGen\\OneSourceGen.csproj",
+      "libraryId": "Microsoft.CodeAnalysis.CSharp",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\OneSourceGen\\OneSourceGen.csproj",
+      "filePath": "D:\\OneERP\\OneSourceGen\\OneSourceGen.csproj",
+      "libraryId": "Microsoft.CodeAnalysis.Analyzers",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\OneSourceGen\\OneSourceGen.csproj",
+      "filePath": "D:\\OneERP\\OneSourceGen\\OneSourceGen.csproj",
+      "libraryId": "Dapper",
+      "targetGraphs": []
+    }
+  ]
+}
