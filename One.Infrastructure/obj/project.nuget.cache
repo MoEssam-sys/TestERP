@@ -1,0 +1,81 @@
+{
+  "version": 2,
+  "dgSpecHash": "V4XyFbDE5FQ=",
+  "success": false,
+  "projectFilePath": "D:\\OneERP\\One.Infrastructure\\One.Infrastructure.csproj",
+  "expectedPackageFiles": [],
+  "logs": [
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Infrastructure\\One.Infrastructure.csproj",
+      "filePath": "D:\\OneERP\\One.Infrastructure\\One.Infrastructure.csproj",
+      "libraryId": "Microsoft.Extensions.Configuration.EnvironmentVariables",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Infrastructure\\One.Infrastructure.csproj",
+      "filePath": "D:\\OneERP\\One.Infrastructure\\One.Infrastructure.csproj",
+      "libraryId": "Microsoft.EntityFrameworkCore.SqlServer",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Infrastructure\\One.Infrastructure.csproj",
+      "filePath": "D:\\OneERP\\One.Infrastructure\\One.Infrastructure.csproj",
+      "libraryId": "Microsoft.Extensions.Configuration.Json",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Infrastructure\\One.Infrastructure.csproj",
+      "filePath": "D:\\OneERP\\One.Infrastructure\\One.Infrastructure.csproj",
+      "libraryId": "Microsoft.Data.SqlClient",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Infrastructure\\One.Infrastructure.csproj",
+      "filePath": "D:\\OneERP\\One.Infrastructure\\One.Infrastructure.csproj",
+      "libraryId": "Microsoft.AspNetCore.Identity.EntityFrameworkCore",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Infrastructure\\One.Infrastructure.csproj",
+      "filePath": "D:\\OneERP\\One.Infrastructure\\One.Infrastructure.csproj",
+      "libraryId": "Microsoft.Extensions.Configuration.FileExtensions",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Infrastructure\\One.Infrastructure.csproj",
+      "filePath": "D:\\OneERP\\One.Infrastructure\\One.Infrastructure.csproj",
+      "libraryId": "Microsoft.Extensions.Configuration",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Infrastructure\\One.Infrastructure.csproj",
+      "filePath": "D:\\OneERP\\One.Infrastructure\\One.Infrastructure.csproj",
+      "libraryId": "Microsoft.EntityFrameworkCore.Design",
+      "targetGraphs": []
+    }
+  ]
+}
