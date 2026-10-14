@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Align with net10 + One.Domain requirements -->
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.10" />
+
+		<ProjectReference Include="..\One.Domain\One.Domain.csproj" />
+		<ProjectReference Include="..\One.Infrastructure\One.Infrastructure.csproj" />
+	</ItemGroup>
+
+	<!--<ItemGroup>
+		<Analyzer Include="..\OneSourceGen\bin\Debug\netstandard2.0\OneSourceGen.dll" />
+	</ItemGroup>-->
+
+	<ItemGroup>
+		<Folder Include="Repos\Common\" />
+		<Folder Include="Repos\Identity\" />
+		<Folder Include="Repos\Entities\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Dapper" Version="2.1.79" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.2" />
+	</ItemGroup>
+
+</Project>

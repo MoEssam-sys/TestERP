@@ -1,0 +1,63 @@
+{
+  "version": 2,
+  "dgSpecHash": "u5ady9PUdUg=",
+  "success": false,
+  "projectFilePath": "D:\\OneERP\\One.Application.Tests\\One.Application.Tests.csproj",
+  "expectedPackageFiles": [],
+  "logs": [
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Application.Tests\\One.Application.Tests.csproj",
+      "filePath": "D:\\OneERP\\One.Application.Tests\\One.Application.Tests.csproj",
+      "libraryId": "xunit.runner.visualstudio",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Application.Tests\\One.Application.Tests.csproj",
+      "filePath": "D:\\OneERP\\One.Application.Tests\\One.Application.Tests.csproj",
+      "libraryId": "Microsoft.NET.Test.Sdk",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Application.Tests\\One.Application.Tests.csproj",
+      "filePath": "D:\\OneERP\\One.Application.Tests\\One.Application.Tests.csproj",
+      "libraryId": "xunit.v3",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Application.Tests\\One.Application.Tests.csproj",
+      "filePath": "D:\\OneERP\\One.Application.Tests\\One.Application.Tests.csproj",
+      "libraryId": "Microsoft.EntityFrameworkCore.InMemory",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Application.Tests\\One.Application.Tests.csproj",
+      "filePath": "D:\\OneERP\\One.Application.Tests\\One.Application.Tests.csproj",
+      "libraryId": "Moq",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Application.Tests\\One.Application.Tests.csproj",
+      "filePath": "D:\\OneERP\\One.Application.Tests\\One.Application.Tests.csproj",
+      "libraryId": "coverlet.collector",
+      "targetGraphs": []
+    }
+  ]
+}
