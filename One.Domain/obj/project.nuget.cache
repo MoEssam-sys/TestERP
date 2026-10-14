@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "dgSpecHash": "1tqrSHiBOgg=",
+  "success": false,
+  "projectFilePath": "D:\\OneERP\\One.Domain\\One.Domain.csproj",
+  "expectedPackageFiles": [],
+  "logs": [
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Domain\\One.Domain.csproj",
+      "filePath": "D:\\OneERP\\One.Domain\\One.Domain.csproj",
+      "libraryId": "Microsoft.AspNetCore.Components",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.Domain\\One.Domain.csproj",
+      "filePath": "D:\\OneERP\\One.Domain\\One.Domain.csproj",
+      "libraryId": "Microsoft.AspNetCore.Identity.EntityFrameworkCore",
+      "targetGraphs": []
+    }
+  ]
+}
