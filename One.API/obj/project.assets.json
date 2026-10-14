@@ -1,0 +1,174 @@
+{
+  "version": 3,
+  "targets": {
+    "net10.0": {}
+  },
+  "libraries": {},
+  "projectFileDependencyGroups": {
+    "net10.0": [
+      "Microsoft.AspNetCore.Authentication.JwtBearer >= 10.0.10",
+      "Microsoft.Data.SqlClient >= 7.0.2",
+      "Microsoft.EntityFrameworkCore.Design >= 10.0.10",
+      "Microsoft.EntityFrameworkCore.SqlServer >= 10.0.10",
+      "Microsoft.EntityFrameworkCore.Tools >= 10.0.10",
+      "Serilog.AspNetCore >= 10.0.0",
+      "Serilog.Sinks.File >= 7.0.0",
+      "Serilog.Sinks.Seq >= 9.1.0"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\Mohammed Essam\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "D:\\OneERP\\One.API\\One.API.csproj",
+      "projectName": "One.API",
+      "projectPath": "D:\\OneERP\\One.API\\One.API.csproj",
+      "packagesPath": "C:\\Users\\Mohammed Essam\\.nuget\\packages\\",
+      "outputPath": "D:\\OneERP\\One.API\\obj\\",
+      "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
+      "configFilePaths": [
+        "C:\\Users\\Mohammed Essam\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "net10.0"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
+        "E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net10.0": {
+          "targetAlias": "net10.0",
+          "projectReferences": {
+            "D:\\OneERP\\One.Application\\One.Application.csproj": {
+              "projectPath": "D:\\OneERP\\One.Application\\One.Application.csproj"
+            },
+            "D:\\OneERP\\One.Domain\\One.Domain.csproj": {
+              "projectPath": "D:\\OneERP\\One.Domain\\One.Domain.csproj"
+            },
+            "D:\\OneERP\\One.Infrastructure\\One.Infrastructure.csproj": {
+              "projectPath": "D:\\OneERP\\One.Infrastructure\\One.Infrastructure.csproj"
+            }
+          }
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "all"
+      },
+      "SdkAnalysisLevel": "10.0.100"
+    },
+    "frameworks": {
+      "net10.0": {
+        "targetAlias": "net10.0",
+        "dependencies": {
+          "Microsoft.AspNetCore.Authentication.JwtBearer": {
+            "target": "Package",
+            "version": "[10.0.10, )"
+          },
+          "Microsoft.Data.SqlClient": {
+            "target": "Package",
+            "version": "[7.0.2, )"
+          },
+          "Microsoft.EntityFrameworkCore.Design": {
+            "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+            "suppressParent": "All",
+            "target": "Package",
+            "version": "[10.0.10, )"
+          },
+          "Microsoft.EntityFrameworkCore.SqlServer": {
+            "target": "Package",
+            "version": "[10.0.10, )"
+          },
+          "Microsoft.EntityFrameworkCore.Tools": {
+            "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+            "suppressParent": "All",
+            "target": "Package",
+            "version": "[10.0.10, )"
+          },
+          "Serilog.AspNetCore": {
+            "target": "Package",
+            "version": "[10.0.0, )"
+          },
+          "Serilog.Sinks.File": {
+            "target": "Package",
+            "version": "[7.0.0, )"
+          },
+          "Serilog.Sinks.Seq": {
+            "target": "Package",
+            "version": "[9.1.0, )"
+          }
+        },
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "frameworkReferences": {
+          "Microsoft.AspNetCore.App": {
+            "privateAssets": "none"
+          },
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.113/PortableRuntimeIdentifierGraph.json"
+      }
+    }
+  },
+  "logs": [
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "libraryId": "Serilog.Sinks.Seq"
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "libraryId": "Microsoft.Data.SqlClient"
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "libraryId": "Microsoft.EntityFrameworkCore.SqlServer"
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "libraryId": "Microsoft.AspNetCore.Authentication.JwtBearer"
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "libraryId": "Microsoft.EntityFrameworkCore.Tools"
+    }
+  ]
+}

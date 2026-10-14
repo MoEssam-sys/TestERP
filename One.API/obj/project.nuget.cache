@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "dgSpecHash": "lJcRqNFoHJc=",
+  "success": false,
+  "projectFilePath": "D:\\OneERP\\One.API\\One.API.csproj",
+  "expectedPackageFiles": [],
+  "logs": [
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.API\\One.API.csproj",
+      "filePath": "D:\\OneERP\\One.API\\One.API.csproj",
+      "libraryId": "Serilog.Sinks.Seq",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.API\\One.API.csproj",
+      "filePath": "D:\\OneERP\\One.API\\One.API.csproj",
+      "libraryId": "Microsoft.Data.SqlClient",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.API\\One.API.csproj",
+      "filePath": "D:\\OneERP\\One.API\\One.API.csproj",
+      "libraryId": "Microsoft.EntityFrameworkCore.SqlServer",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.API\\One.API.csproj",
+      "filePath": "D:\\OneERP\\One.API\\One.API.csproj",
+      "libraryId": "Microsoft.AspNetCore.Authentication.JwtBearer",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.API\\One.API.csproj",
+      "filePath": "D:\\OneERP\\One.API\\One.API.csproj",
+      "libraryId": "Microsoft.EntityFrameworkCore.Tools",
+      "targetGraphs": []
+    }
+  ]
+}

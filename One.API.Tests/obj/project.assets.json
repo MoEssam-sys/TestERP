@@ -1,0 +1,161 @@
+{
+  "version": 3,
+  "targets": {
+    "net10.0": {}
+  },
+  "libraries": {},
+  "projectFileDependencyGroups": {
+    "net10.0": [
+      "Microsoft.AspNetCore.Mvc.Testing >= 10.0.10",
+      "Microsoft.NET.Test.Sdk >= 18.8.1",
+      "Moq >= 4.20.72",
+      "coverlet.collector >= 10.0.1",
+      "xunit.runner.visualstudio >= 3.1.5",
+      "xunit.v3 >= 3.2.2"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\Mohammed Essam\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "D:\\OneERP\\One.API.Tests\\One.API.Tests.csproj",
+      "projectName": "One.API.Tests",
+      "projectPath": "D:\\OneERP\\One.API.Tests\\One.API.Tests.csproj",
+      "packagesPath": "C:\\Users\\Mohammed Essam\\.nuget\\packages\\",
+      "outputPath": "D:\\OneERP\\One.API.Tests\\obj\\",
+      "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
+      "configFilePaths": [
+        "C:\\Users\\Mohammed Essam\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "net10.0"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
+        "E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net10.0": {
+          "targetAlias": "net10.0",
+          "projectReferences": {
+            "D:\\OneERP\\One.API\\One.API.csproj": {
+              "projectPath": "D:\\OneERP\\One.API\\One.API.csproj"
+            }
+          }
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "all"
+      },
+      "SdkAnalysisLevel": "10.0.100"
+    },
+    "frameworks": {
+      "net10.0": {
+        "targetAlias": "net10.0",
+        "dependencies": {
+          "Microsoft.AspNetCore.Mvc.Testing": {
+            "target": "Package",
+            "version": "[10.0.10, )"
+          },
+          "Microsoft.NET.Test.Sdk": {
+            "target": "Package",
+            "version": "[18.8.1, )"
+          },
+          "Moq": {
+            "target": "Package",
+            "version": "[4.20.72, )"
+          },
+          "coverlet.collector": {
+            "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+            "suppressParent": "All",
+            "target": "Package",
+            "version": "[10.0.1, )"
+          },
+          "xunit.runner.visualstudio": {
+            "include": "Runtime, Build, Native, ContentFiles, Analyzers",
+            "suppressParent": "All",
+            "target": "Package",
+            "version": "[3.1.5, )"
+          },
+          "xunit.v3": {
+            "target": "Package",
+            "version": "[3.2.2, )"
+          }
+        },
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "frameworkReferences": {
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.113/PortableRuntimeIdentifierGraph.json"
+      }
+    }
+  },
+  "logs": [
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "libraryId": "xunit.runner.visualstudio"
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "libraryId": "Microsoft.NET.Test.Sdk"
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "libraryId": "xunit.v3"
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "libraryId": "Moq"
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "libraryId": "coverlet.collector"
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "libraryId": "Microsoft.AspNetCore.Mvc.Testing"
+    }
+  ]
+}

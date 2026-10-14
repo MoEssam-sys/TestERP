@@ -1,0 +1,63 @@
+{
+  "version": 2,
+  "dgSpecHash": "6vYCUwCDGmc=",
+  "success": false,
+  "projectFilePath": "D:\\OneERP\\One.API.Tests\\One.API.Tests.csproj",
+  "expectedPackageFiles": [],
+  "logs": [
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.API.Tests\\One.API.Tests.csproj",
+      "filePath": "D:\\OneERP\\One.API.Tests\\One.API.Tests.csproj",
+      "libraryId": "xunit.runner.visualstudio",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.API.Tests\\One.API.Tests.csproj",
+      "filePath": "D:\\OneERP\\One.API.Tests\\One.API.Tests.csproj",
+      "libraryId": "Microsoft.NET.Test.Sdk",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.API.Tests\\One.API.Tests.csproj",
+      "filePath": "D:\\OneERP\\One.API.Tests\\One.API.Tests.csproj",
+      "libraryId": "xunit.v3",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.API.Tests\\One.API.Tests.csproj",
+      "filePath": "D:\\OneERP\\One.API.Tests\\One.API.Tests.csproj",
+      "libraryId": "Moq",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.API.Tests\\One.API.Tests.csproj",
+      "filePath": "D:\\OneERP\\One.API.Tests\\One.API.Tests.csproj",
+      "libraryId": "coverlet.collector",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "The local source 'E:\\ADTFinalRepo\\ADTBlazor\\wwwroot\\Calling APi Framework Package' doesn't exist.",
+      "projectPath": "D:\\OneERP\\One.API.Tests\\One.API.Tests.csproj",
+      "filePath": "D:\\OneERP\\One.API.Tests\\One.API.Tests.csproj",
+      "libraryId": "Microsoft.AspNetCore.Mvc.Testing",
+      "targetGraphs": []
+    }
+  ]
+}
