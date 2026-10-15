@@ -114,6 +114,8 @@
 	<ItemGroup>
 		<!-- SignalR client for realtime communication -->
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.1" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="10.0.13" Condition="'$(TargetFramework)' == 'net10.0-ios'" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="10.0.13" Condition="'$(TargetFramework)' == 'net10.0-maccatalyst'" />
 
 		<!-- Debug logging -->
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.1" />

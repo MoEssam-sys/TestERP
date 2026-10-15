@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("Lightweight wire contracts shared by the API, WebAssembly, and MAUI clients.")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b6e9982582a9d5f58e40cf30b3c8053bdeec29cf")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4b2d7c4ad906e854919019d6ffd570eb5f5c6719")]
 [assembly: System.Reflection.AssemblyProductAttribute("One.Contracts")]
 [assembly: System.Reflection.AssemblyTitleAttribute("One.Contracts")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
