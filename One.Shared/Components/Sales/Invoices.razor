@@ -1,0 +1,327 @@
+﻿@page "/sales/invoices"
+@using MudBlazor
+@attribute [One.Shared.Security.PagePermission(One.Domain.Constants.PermissionCatalogKeys.Pages.SalesInvoices)]
+
+<!-- اختيارية: اللودر + أزرار عامة -->
+<OneLoader Visible="@OverlayLoad" Text="@trgma.Loading" LoaderType="LoaderType.Circles" />
+<OneButtonsBar UpdateState="IsEditing" IsSaveBtnDisabled="OverlayLoad" IsClearBtnDisabled="OverlayLoad" OnBtnClick="HandleToolbar" />
+<OneBreadcrumbs BreadItems="_breadcrumbs" BreadColor="Color.Tertiary" />
+
+<!-- المنطقة العلوية: 75vh منقسمة يمين/شمال -->
+<MudGrid Class="top-panes mb-3">
+    <!-- يمين: فورمة الفاتورة -->
+    <MudItem xs="12" md="6" Class="pane">
+        <MudPaper Class="pa-3 pane-card">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                <MudText Typo="Typo.subtitle1" Class="fw-bold">@trgma.InvoiceDetails</MudText>
+                <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined">
+                    @((Selected?.Number) ?? tr("NewInvoice"))
+                </MudChip>
+            </MudStack>
+            <MudDivider Class="my-2" />
+
+            <div class="pane-scroll">
+                <MudForm @ref="FormRef" @bind-IsValid="FormValid">
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="Selected!.Number"
+                                          Label="@trgma.Number"
+                                          Disabled="true"
+                                          Margin="Margin.Dense"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker Date="Selected!.Date" DateChanged="@(date => Selected!.Date = date)"
+                                           Label="@trgma.Date"
+                                           DateFormat="dd/MM/yyyy"
+                                           Editable
+                                           ShowToolbar
+                                           Margin="Margin.Dense"
+                                           Variant="Variant.Outlined" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="Selected!.Customer"
+                                          Label="@trgma.Customer"
+                                          Required="true"
+                                          Margin="Margin.Dense"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudSelect @bind-Value="Selected!.Status"
+                                       Label="@trgma.Status"
+                                       Margin="Margin.Dense"
+                                       Variant="Variant.Outlined">
+                                <MudSelectItem Value="Open">@trgma.Open</MudSelectItem>
+                                <MudSelectItem Value="Closed">@trgma.Closed</MudSelectItem>
+                                <MudSelectItem Value="Cancelled">@trgma.Cancelled</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudNumericField T="decimal" @bind-Value="Selected!.Total"
+                                             Label="@trgma.Total"
+                                             Format="N2"
+                                             Margin="Margin.Dense"
+                                             Variant="Variant.Outlined"
+                                             HideSpinButtons="true" />
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="Selected!.Notes"
+                                          Label="@trgma.Notes"
+                                          Lines="3"
+                                          Margin="Margin.Dense"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                    </MudGrid>
+                </MudForm>
+            </div>
+        </MudPaper>
+    </MudItem>
+
+    <!-- شمال: قائمة الفواتير -->
+    <MudItem xs="12" md="6" Class="pane">
+        <MudPaper Class="pa-3 pane-card">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudText Typo="Typo.subtitle1" Class="fw-bold">@trgma.Invoices</MudText>
+                <MudTextField @bind-Value="Search"
+                              Placeholder="@trgma.Search"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Immediate="true"
+                              DebounceInterval="300"
+                              Class="ml-auto"
+                              Margin="Margin.Dense"
+                              Variant="Variant.Outlined" />
+            </MudStack>
+            <MudDivider Class="my-2" />
+
+            <div class="pane-scroll">
+                <MudDataGrid T="InvoiceDto"
+                             Items="@FilteredInvoices"
+                             RowClick="OnInvoiceRowClick"
+                             Hover="true"
+                             Dense="true"
+                             Bordered="true"
+                             Elevation="0"
+                             Filterable="false"
+                             Groupable="false"
+                             SortMode="SortMode.Single"
+                             RowsPerPage="3"
+                             @bind-CurrentPage="_page"
+                             Virtualize="false">
+                    <Columns>
+                        <PropertyColumn T="InvoiceDto" TProperty="string" Property="x => x.Number" Title="@trgma.Number" />
+                        <PropertyColumn T="InvoiceDto" TProperty="string" Property="x => x.Customer" Title="@trgma.Customer" />
+                        <PropertyColumn T="InvoiceDto" TProperty="DateTime?" Property="x => x.Date" Title="@trgma.Date" Format="d" />
+                        <PropertyColumn T="InvoiceDto" TProperty="decimal" Property="x => x.Total" Title="@trgma.Total" Format="N2"
+                                        CellStyleFunc="@( (InvoiceDto r) => "text-end")" />
+                        <TemplateColumn Title="@trgma.Status">
+                            <CellTemplate>
+                                <MudChip Color="@StatusColor(context.Item.Status)" Variant="Variant.Outlined">
+                                    @trgma.Resource(context.Item.Status)
+                                </MudChip>
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="">
+                            <CellTemplate>
+                                <MudIconButton Icon="@Icons.Material.Filled.Visibility" OnClick="@(() => SelectInvoice(context.Item))" />
+                                <PermissionView PageKey="@One.Domain.Constants.PermissionCatalogKeys.Pages.SalesInvoices"
+                                                ActionKey="@One.Domain.Constants.PermissionCatalogKeys.Actions.Delete">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" />
+                                </PermissionView>
+                            </CellTemplate>
+                        </TemplateColumn>
+                    </Columns>
+                    <PagerContent>
+                        <MudDataGridPager T="InvoiceDto" />
+                    </PagerContent>
+                </MudDataGrid>
+
+            </div>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+<!-- جدول عناصر الفاتورة (عرض كامل) -->
+<MudPaper Class="pa-3">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+        <MudText Typo="Typo.subtitle1" Class="fw-bold">@trgma.InvoiceLines</MudText>
+        <MudText Typo="Typo.body2">@trgma.Invoice: @(Selected?.Number ?? "-")</MudText>
+    </MudStack>
+    <MudDivider Class="my-2" />
+
+    <MudTable T="InvoiceLineDto" Items="@(Selected?.Lines ?? new List<InvoiceLineDto>())"
+              Dense="true" Hover="true" Bordered="true" Elevation="0">
+        <HeaderContent>
+            <MudTh>@trgma.Item</MudTh>
+            <MudTh>@trgma.Qty</MudTh>
+            <MudTh>@trgma.Price</MudTh>
+            <MudTh>@trgma.Total</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Item</MudTd>
+            <MudTd>@context.Qty</MudTd>
+            <MudTd>@context.Price.ToString("N2")</MudTd>
+            <MudTd>@(context.Qty * context.Price).ToString("N2")</MudTd>
+        </RowTemplate>
+        <FooterContent>
+            <MudTd></MudTd>
+            <MudTd></MudTd>
+            <MudTd Class="fw-bold">@trgma.Total</MudTd>
+            <MudTd Class="fw-bold">
+                @((Selected?.Lines?.Sum(l => l.Qty * l.Price) ?? 0m).ToString("N2"))
+            </MudTd>
+        </FooterContent>
+    </MudTable>
+</MudPaper>
+
+@code {
+    // ترجمة ديناميكية عند الحاجة لمفتاح عام
+    string tr(string key) => trgma.Resource(key);
+    string Open = "Open";
+    string Closed = "Closed";
+    string Cancelled = "Cancelled";
+    // حالة عامة
+    bool OverlayLoad { get; set; }
+    bool IsEditing { get; set; }
+    List<BreadcrumbItem> _breadcrumbs = new() {
+        new("Sales", href: "/sales"),
+        new("Invoices", href: "/sales/invoices")
+    };
+    // صفحة الباجينج الحالية
+    int _page = 0;
+
+    // البحث مع Reset للصفحة
+    private string _search = string.Empty;
+    private string Search
+    {
+        get => _search;
+        set
+        {
+            if (_search == value) return;
+            _search = value;
+            _page = 0; // ارجع لأول صفحة مع تغيّر البحث
+            StateHasChanged();
+        }
+    }
+    // فورمة
+    MudForm? FormRef;
+    bool FormValid;
+
+    // داتا (Mock)
+    List<InvoiceDto> InvoicesList { get; set; } = [];
+    InvoiceDto? Selected { get; set; }
+
+    IEnumerable<InvoiceDto> FilteredInvoices =>
+        string.IsNullOrWhiteSpace(_search)
+            ? InvoicesList
+            : InvoicesList.Where(x =>
+                x.Number.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+                x.Customer.Contains(_search, StringComparison.OrdinalIgnoreCase));
+
+    // ألوان الحالة
+    Color StatusColor(string s) => s switch {
+        "Open" => Color.Warning,
+        "Closed" => Color.Success,
+        "Cancelled" => Color.Error,
+        _ => Color.Default
+    };
+
+    // ##################
+
+    protected override Task OnInitializedAsync()
+    {
+        // كان فيه متغير محلي Invoices لا يُستخدم — أصلحه إلى InvoicesList
+        InvoicesList = Seed();
+
+        // اختَر أول فاتورة لو موجودة، أو أنشئ فاتورة جديدة افتراضيًا
+        Selected = InvoicesList.FirstOrDefault()
+            ?? new InvoiceDto
+            {
+                Number = "INV-NEW",
+                Date = DateTime.Today,
+                Customer = string.Empty,
+                Status = Open, // "Open"
+                Total = 0m,
+                Notes = string.Empty,
+                Lines = new()
+            };
+
+        return Task.CompletedTask;
+    }
+
+
+    // نمط خليّة أرقام
+    string NumberCell(InvoiceDto row) => "text-end";
+
+    // أحداث
+    void OnInvoiceRowClick(DataGridRowClickEventArgs<InvoiceDto> e) => SelectInvoice(e.Item);
+    void SelectInvoice(InvoiceDto inv)
+    {
+        Selected = inv;
+        StateHasChanged();
+    }
+
+    async Task HandleToolbar(OneBtnClick btn)
+    {
+        await Task.Yield();
+        switch (btn)
+        {
+            case OneBtnClick.Save:
+                // TODO: حفظ
+                break;
+            case OneBtnClick.Update:
+                IsEditing = true;
+                break;
+            case OneBtnClick.Clear:
+                Selected = null;
+                break;
+            case OneBtnClick.Delete:
+                // TODO: حذف
+                break;
+        }
+        StateHasChanged();
+    }
+
+    // داتا نموذجية
+    static List<InvoiceDto> Seed()
+    {
+        var rnd = new Random(7);
+        return Enumerable.Range(1, 40).Select(i =>
+            new InvoiceDto
+            {
+                Number = $"INV-{1000 + i}",
+                Date = DateTime.Today.AddDays(-i),
+                Customer = $"عميل {i}",
+                Status = i % 5 == 0 ? "Cancelled" : (i % 3 == 0 ? "Closed" : "Open"),
+                Total = Math.Round((decimal)rnd.Next(900, 8000) + rnd.Next(0, 99) / 100m, 2),
+                Lines = new List<InvoiceLineDto>
+                {
+                    new() { Item = "صنف أ", Qty = 2, Price = 50 },
+                    new() { Item = "صنف ب", Qty = 1, Price = 125.75m }
+                }
+            }).ToList();
+    }
+
+    // DTOs محلية
+    class InvoiceDto
+    {
+        public string Number { get; set; } = "";
+        public string Notes { get; set; } = "";
+        public DateTime? Date { get; set; }
+        public string Customer { get; set; } = "";
+        public decimal Total { get; set; }
+        public string Status { get; set; } = "Open";
+        public List<InvoiceLineDto> Lines { get; set; } = new();
+    }
+    class InvoiceLineDto
+    {
+        public string Item { get; set; } = "";
+        public int Qty { get; set; }
+        public decimal Price { get; set; }
+    }
+}

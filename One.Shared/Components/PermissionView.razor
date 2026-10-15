@@ -1,0 +1,18 @@
+@using One.Shared.Services
+@inject EffectivePermissionState PermissionState
+
+@if (PermissionState.Can(PageKey, ActionKey))
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public string PageKey { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string ActionKey { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public RenderFragment ChildContent { get; set; } = default!;
+}

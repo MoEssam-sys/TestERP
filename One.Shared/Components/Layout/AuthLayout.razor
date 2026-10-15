@@ -1,0 +1,120 @@
+@inherits LayoutComponentBase
+
+<div class="auth-root @(UI.IsDark ? "is-dark" : null)" dir="@(IsArabic ? "rtl" : "ltr")">
+    <a class="auth-skip-link" href="#auth-main">@trgma.SkipToContent</a>
+
+    <header class="auth-topbar">
+        <a class="auth-brand" href="/onboarding" aria-label="OneERP">
+            <span class="auth-brand-mark" aria-hidden="true">
+                <span></span><span></span><span></span><span></span>
+            </span>
+            <span class="auth-brand-copy">
+                <strong>OneERP</strong>
+                <small>@trgma.AuthProductTagline</small>
+            </span>
+        </a>
+
+        <div class="auth-toolbar">
+            <button type="button"
+                    class="auth-icon-button"
+                    title="@(IsArabic ? trgma.SwitchToEnglish : trgma.SwitchToArabic)"
+                    aria-label="@(IsArabic ? trgma.SwitchToEnglish : trgma.SwitchToArabic)"
+                    @onclick="ToggleLanguageAsync">
+                <MudIcon Icon="@Icons.Material.Outlined.Translate" Size="Size.Small" />
+                <span>@(IsArabic ? "EN" : "ع")</span>
+            </button>
+            <button type="button"
+                    class="auth-icon-button auth-theme-button"
+                    title="@trgma.ChangeStyle"
+                    aria-label="@trgma.ChangeStyle"
+                    @onclick="UI.ToggleDark">
+                <MudIcon Icon="@(UI.IsDark ? Icons.Material.Outlined.LightMode : Icons.Material.Outlined.DarkMode)" Size="Size.Small" />
+            </button>
+        </div>
+    </header>
+
+    <main id="auth-main" class="auth-main">
+        <section class="auth-story" aria-labelledby="auth-story-title">
+            <div class="auth-story-glow" aria-hidden="true"></div>
+            <div class="auth-eyebrow">
+                <span class="auth-live-dot"></span>
+                @trgma.AuthProductTagline
+            </div>
+            <h1 id="auth-story-title">@trgma.AuthHeroTitle</h1>
+            <p class="auth-story-lead">@trgma.AuthHeroDescription</p>
+
+            <div class="auth-platform-rail" aria-label="@trgma.AuthAvailableEverywhere">
+                <div class="auth-rail-line" aria-hidden="true"></div>
+                <div class="auth-platform-node">
+                    <span><MudIcon Icon="@Icons.Material.Outlined.Language" /></span>
+                    <strong>@trgma.AuthPlatformWeb</strong>
+                </div>
+                <div class="auth-platform-node">
+                    <span><MudIcon Icon="@Icons.Material.Outlined.DesktopWindows" /></span>
+                    <strong>@trgma.AuthPlatformDesktop</strong>
+                </div>
+                <div class="auth-platform-node">
+                    <span><MudIcon Icon="@Icons.Material.Outlined.PhoneAndroid" /></span>
+                    <strong>@trgma.AuthPlatformMobile</strong>
+                </div>
+            </div>
+
+            <div class="auth-proof-grid">
+                <article>
+                    <MudIcon Icon="@Icons.Material.Outlined.DomainVerification" />
+                    <div>
+                        <strong>@trgma.AuthTenantTitle</strong>
+                        <span>@trgma.AuthTenantDescription</span>
+                    </div>
+                </article>
+                <article>
+                    <MudIcon Icon="@Icons.Material.Outlined.AdminPanelSettings" />
+                    <div>
+                        <strong>@trgma.AuthPermissionTitle</strong>
+                        <span>@trgma.AuthPermissionDescription</span>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="auth-form-zone">
+            <div class="auth-form-frame">
+                @Body
+            </div>
+            <div class="auth-security-note">
+                <MudIcon Icon="@Icons.Material.Outlined.Lock" Size="Size.Small" />
+                <span>@trgma.AuthSecurityNote</span>
+            </div>
+        </section>
+    </main>
+
+    <footer class="auth-footer">
+        <span>© @DateTime.UtcNow.Year OneERP</span>
+        <span>@trgma.AuthFooter</span>
+    </footer>
+</div>
+
+@code {
+    private bool IsArabic =>
+        _localizer.CurrentCulture?.TwoLetterISOLanguageName == "ar";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _localizer.InitLocalizedComponent(this);
+        if (_localizer.CurrentCulture is null)
+            _localizer.SetLanguage(System.Globalization.CultureInfo.GetCultureInfo("ar"));
+
+        UI.SetRtl(IsArabic);
+        await _jsInterop.SetDocumentLanguage(
+            IsArabic ? "ar" : "en-US",
+            IsArabic);
+    }
+
+    private async Task ToggleLanguageAsync()
+    {
+        var culture = IsArabic ? "en-US" : "ar";
+        _localizer.SetLanguage(System.Globalization.CultureInfo.GetCultureInfo(culture));
+        UI.SetRtl(culture == "ar");
+        await _jsInterop.SetDocumentLanguage(culture, culture == "ar");
+    }
+}

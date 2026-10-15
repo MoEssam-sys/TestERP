@@ -1,0 +1,90 @@
+@page "/register-admin/{CompanyId:int}"
+@using One.Shared.Services
+@attribute [One.Shared.Security.PagePermission(One.Domain.Constants.PermissionCatalogKeys.Pages.RegisterAdmin)]
+@using One.Shared.Services.Extenstions
+@using One.Domain.DTOs.Identity
+@using One.Domain.Base
+@inject NavigationManager _nav
+@inject MessagesCenter _msg
+@inject IKeysAccessor trgma
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "SuperAdmin")]
+
+<MudGrid Class="d-flex justify-center align-center" Style="height: 100vh;">
+    <MudItem xs="12" sm="8" md="5">
+        <MudCard Elevation="4" Class="pa-4">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h5" Align="Align.Center">@trgma.SetupAdminAccount</MudText>
+                    <MudText Typo="Typo.body2" Align="Align.Center">@trgma.RegisterFirstAdminDescription</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudForm @ref="_form">
+                    <MudTextField @bind-Value="Dto.FirstName" Label="@trgma.FirstName" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" />
+                    <MudTextField @bind-Value="Dto.LastName" Label="@trgma.LastName" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" />
+                    <MudTextField @bind-Value="Dto.UserName" Label="@trgma.Username" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" />
+                    <MudTextField @bind-Value="Dto.Password" Label="@trgma.Password" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" InputType="InputType.Password" />
+                    <MudTextField @bind-Value="ConfirmPassword" Label="@trgma.ConfirmPassword" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" InputType="InputType.Password" />
+                </MudForm>
+            </MudCardContent>
+            <MudCardActions Class="d-flex justify-center">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Register" Disabled="_loading">
+                     @if (_loading)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                        <MudText Class="ms-2">@trgma.Registering</MudText>
+                    }
+                    else
+                    {
+                        <MudText>@trgma.CreateAdmin</MudText>
+                    }
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter] public int CompanyId { get; set; }
+
+    private CreateManagedUserRequest Dto { get; set; } = new();
+    private string ConfirmPassword { get; set; } = "";
+    private bool _loading = false;
+    private MudForm _form = null!;
+
+    private async Task Register()
+    {
+        await _form.Validate();
+        if (!_form.IsValid) return;
+
+        if (Dto.Password != ConfirmPassword)
+        {
+            await _msg.PublishErrors(trgma.PasswordsDoNotMatch);
+            return;
+        }
+
+        Dto.CompanyId = CompanyId;
+        Dto.Age = 30; // Default
+        Dto.Role = "CompanyAdmin";
+
+        _loading = true;
+        try
+        {
+            var res = await _api.PostAsync<object, CreateManagedUserRequest>(
+                "api/Authentication/managed-users",
+                Dto,
+                trgma.RegistrationFailed
+            );
+
+            if (res.Success)
+            {
+                await _msg.NotifySuccess(trgma.AdminCreatedSuccessfullyPleaseLogin);
+                _nav.NavigateTo($"/superadmin/companies/{CompanyId}");
+            }
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

@@ -1,0 +1,400 @@
+@page "/sysadmin/companies"
+@page "/sysadmin/restaurants"
+@using One.Domain.Base
+@using One.Domain.DTOs
+@attribute [One.Shared.Security.PagePermission(One.Domain.Constants.PermissionCatalogKeys.Pages.Companies)]
+@using One.Domain.DTOs.Identity
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "SuperAdmin")]
+
+<MudContainer MaxWidth="MaxWidth.False" Class="companies-page py-4">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4 page-heading">
+        <div>
+            <MudText Typo="Typo.h4">@trgma.RestaurantsManagement</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@trgma.RestaurantCreationDescription</MudText>
+        </div>
+        <MudStack Row="true" Spacing="2" Class="heading-actions">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CardMembership"
+                       OnClick="@(() => _nav.NavigateTo("/sysadmin/subscription-plans"))">
+                @trgma.SubscriptionPlans
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddBusiness" OnClick="StartCreate">
+                @trgma.CreateRestaurant
+            </MudButton>
+        </MudStack>
+    </MudStack>
+
+    @if (_loading)
+    {
+        <MudSkeleton Height="72px" Class="mb-3" />
+        <MudSkeleton Height="260px" />
+    }
+    else if (_loadFailed)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-3">@trgma.FailedToLoadData</MudAlert>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync">
+            @trgma.TryAgain
+        </MudButton>
+    }
+    else
+    {
+        <MudPaper Elevation="1" Class="company-list pa-3">
+            <MudTextField T="string" Value="_search" ValueChanged="OnSearchChanged"
+                          Placeholder="@trgma.SearchRestaurantPlaceholder" Immediate="true" DebounceInterval="350"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                          Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 company-search" />
+            <MudTable T="CompanySummaryDto" @ref="_table" ServerData="LoadCompaniesPage"
+                      Hover="true" Breakpoint="Breakpoint.Sm">
+                <HeaderContent>
+                    <MudTh>@trgma.Name</MudTh>
+                    <MudTh>@trgma.Code</MudTh>
+                    <MudTh>@trgma.Users</MudTh>
+                    <MudTh>@trgma.Admins</MudTh>
+                    <MudTh>@trgma.Status</MudTh>
+                    <MudTh>@trgma.CreatedOn</MudTh>
+                    <MudTh>@trgma.Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@trgma.Name"><strong>@context.Name</strong></MudTd>
+                    <MudTd DataLabel="@trgma.Code">@context.Code</MudTd>
+                    <MudTd DataLabel="@trgma.Users">@context.UsersCount</MudTd>
+                    <MudTd DataLabel="@trgma.Admins">@context.AdminsCount</MudTd>
+                    <MudTd DataLabel="@trgma.Status">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.IsActive ? Color.Success : Color.Error)">
+                            @(context.IsActive ? trgma.Active : trgma.Inactive)
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="@trgma.CreatedOn">@context.CreatedOn.ToLocalTime().ToString("d")</MudTd>
+                    <MudTd DataLabel="@trgma.Actions">
+                        <MudTooltip Text="@trgma.ViewDetails">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary" Size="Size.Small"
+                                           OnClick="@(() => _nav.NavigateTo($"/superadmin/restaurants/{context.Id}"))" />
+                        </MudTooltip>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent><MudTablePager /></PagerContent>
+                <NoRecordsContent>
+                    <MudText Class="pa-4">@trgma.NoRestaurantsFound</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        </MudPaper>
+    }
+
+    @if (_showCreate)
+    {
+        <MudPaper Elevation="4" Class="provisioning-form pa-4 mt-4">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+                <MudText Typo="Typo.h5">@trgma.CreateRestaurant</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="CancelCreate" />
+            </MudStack>
+
+            <MudForm @ref="_form">
+                <MudPaper Outlined="true" Class="form-section pa-4 mb-4">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.Business" Color="Color.Primary" />
+                        <MudText Typo="Typo.h6">@trgma.RestaurantInformation</MudText>
+                    </MudStack>
+                    <MudGrid>
+                        <MudItem xs="12" md="8">
+                            <MudTextField @bind-Value="_model.Name" Label="@trgma.Name" Required="true" MaxLength="100" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="_model.Code" Label="@trgma.RestaurantCode" Required="true" MaxLength="50" Variant="Variant.Outlined" />
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+
+                <MudPaper Outlined="true" Class="form-section pa-4 mb-4">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.CardMembership" Color="Color.Primary" />
+                        <MudText Typo="Typo.h6">@trgma.SubscriptionInformation</MudText>
+                    </MudStack>
+
+                    @if (_activePlans.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Warning" Class="mb-3">
+                            @trgma.NoActivePlans
+                            <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="@(() => _nav.NavigateTo("/sysadmin/subscription-plans"))">
+                                @trgma.CreatePlan
+                            </MudButton>
+                        </MudAlert>
+                    }
+
+                    <MudGrid>
+                        <MudItem xs="12" md="8">
+                            <MudSelect T="int?" Value="_model.PlanId" ValueChanged="OnPlanChanged" Label="@trgma.SelectPlan"
+                                       Required="true" Variant="Variant.Outlined" Disabled="@(_activePlans.Count == 0)">
+                                @foreach (var plan in _activePlans)
+                                {
+                                    <MudSelectItem T="int?" Value="@((int?)plan.Id)">
+                                        @plan.Name — @plan.Price.ToString("N2") @plan.Currency — @plan.DurationInDays @trgma.Days
+                                    </MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudDatePicker Date="_model.StartsAt" DateChanged="@(value => _model.StartsAt = value)"
+                                           Label="@trgma.SubscriptionStartDate" Variant="Variant.Outlined" />
+                        </MudItem>
+                    </MudGrid>
+
+                    @if (SelectedPlan is not null)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="my-3">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="plan-summary">
+                                <div>
+                                    <MudText Typo="Typo.subtitle1"><strong>@SelectedPlan.Name</strong></MudText>
+                                    <MudText Typo="Typo.body2">@SelectedPlan.Price.ToString("N2") @SelectedPlan.Currency · @SelectedPlan.DurationInDays @trgma.Days</MudText>
+                                </div>
+                                <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">@_selectedPermissions.Count @trgma.Permissions</MudChip>
+                            </MudStack>
+                        </MudAlert>
+
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2 permission-heading">
+                            <div>
+                                <MudText Typo="Typo.subtitle1"><strong>@trgma.CustomizeRestaurantPermissions</strong></MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@trgma.PlanPermissionsHint</MudText>
+                            </div>
+                            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Restore" OnClick="ResetPlanPermissions">
+                                @trgma.ResetToPlanPermissions
+                            </MudButton>
+                        </MudStack>
+                        <PermissionSelector Modules="_catalog" Selected="_selectedPermissions" SelectedChanged="OnPermissionsChanged" />
+                    }
+                </MudPaper>
+
+                <MudPaper Outlined="true" Class="form-section pa-4">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Color="Color.Primary" />
+                        <MudText Typo="Typo.h6">@trgma.AdministratorInformation</MudText>
+                    </MudStack>
+                    <MudGrid>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_model.FirstName" Label="@trgma.FirstName" Required="true" MaxLength="100" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_model.LastName" Label="@trgma.LastName" Required="true" MaxLength="100" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="_model.UserName" Label="@trgma.Username" Required="true" MaxLength="256" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="_model.Email" Label="@trgma.Email" InputType="InputType.Email" MaxLength="256" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="_model.PhoneNumber" Label="@trgma.PhoneNumber" InputType="InputType.Telephone" MaxLength="50" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_model.Password" Label="@trgma.Password" Required="true" InputType="InputType.Password" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_model.ConfirmPassword" Label="@trgma.ConfirmPassword" Required="true" InputType="InputType.Password" Variant="Variant.Outlined" />
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+
+                <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2" Class="mt-4 form-actions">
+                    <MudButton Variant="Variant.Text" OnClick="CancelCreate" Disabled="_saving">@trgma.Cancel</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddBusiness"
+                               OnClick="CreateCompanyAsync" Disabled="@(_saving || _activePlans.Count == 0)">
+                        @if (_saving)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+                            @trgma.CreatingCompany
+                        }
+                        else
+                        {
+                            @trgma.Create
+                        }
+                    </MudButton>
+                </MudStack>
+            </MudForm>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    private readonly List<SubscriptionPlanDto> _activePlans = [];
+    private IReadOnlyList<PermissionCatalogModuleDto> _catalog = [];
+    private IReadOnlyCollection<PermissionSelectionDto> _selectedPermissions = [];
+    private ProvisioningModel _model = new();
+    private MudForm? _form;
+    private MudTable<CompanySummaryDto>? _table;
+    private string _search = string.Empty;
+    private bool _loading = true;
+    private bool _loadFailed;
+    private bool _showCreate;
+    private bool _saving;
+
+    private SubscriptionPlanDto? SelectedPlan
+        => _model.PlanId.HasValue
+            ? _activePlans.FirstOrDefault(plan => plan.Id == _model.PlanId.Value)
+            : null;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _loadFailed = false;
+        var plansTask = _api.GetAsync<IReadOnlyList<SubscriptionPlanDto>>(
+            "api/subscription-plans",
+            trgma.FailedToLoadPlans);
+        var catalogTask = _api.GetAsync<IReadOnlyList<PermissionCatalogModuleDto>>(
+            "api/permission-catalog",
+            trgma.FailedToLoadPermissions);
+        await Task.WhenAll(plansTask, catalogTask);
+
+        var plans = await plansTask;
+        var catalog = await catalogTask;
+        if (plans.Success && plans.Data is not null &&
+            catalog.Success && catalog.Data is not null)
+        {
+            _activePlans.Clear();
+            _activePlans.AddRange(plans.Data.Where(plan => plan.IsActive).OrderBy(plan => plan.Name));
+            _catalog = catalog.Data.Where(module => module.IsAssignableToPlans).ToList();
+        }
+        else
+        {
+            _loadFailed = true;
+        }
+
+        _loading = false;
+    }
+
+    private async Task<TableData<CompanySummaryDto>> LoadCompaniesPage(
+        TableState state,
+        CancellationToken cancellationToken)
+    {
+        var route = $"api/Companies/paged?pageNumber={state.Page + 1}&pageSize={state.PageSize}";
+        if (!string.IsNullOrWhiteSpace(_search))
+            route += $"&search={Uri.EscapeDataString(_search.Trim())}";
+
+        var result = await _api.GetAsync<PagedResult<CompanySummaryDto>>(
+            route,
+            trgma.FailedToLoadData,
+            cancellationToken);
+        if (!result.Success || result.Data is null)
+        {
+            _loadFailed = true;
+            return new TableData<CompanySummaryDto> { Items = [], TotalItems = 0 };
+        }
+
+        _loadFailed = false;
+        return new TableData<CompanySummaryDto>
+        {
+            Items = result.Data.Items,
+            TotalItems = result.Data.TotalCount
+        };
+    }
+
+    private async Task OnSearchChanged(string value)
+    {
+        _search = value;
+        if (_table is not null)
+            await _table.ReloadServerData();
+    }
+
+    private void StartCreate()
+    {
+        _model = new ProvisioningModel();
+        _selectedPermissions = [];
+        _showCreate = true;
+    }
+
+    private void CancelCreate() => _showCreate = false;
+
+    private Task OnPlanChanged(int? planId)
+    {
+        _model.PlanId = planId;
+        ResetPlanPermissions();
+        return Task.CompletedTask;
+    }
+
+    private void ResetPlanPermissions()
+        => _selectedPermissions = SelectedPlan?.Permissions.ToHashSet() ?? [];
+
+    private Task OnPermissionsChanged(IReadOnlyList<PermissionSelectionDto> permissions)
+    {
+        _selectedPermissions = permissions.ToHashSet();
+        return Task.CompletedTask;
+    }
+
+    private async Task CreateCompanyAsync()
+    {
+        if (_form is null)
+            return;
+
+        await _form.Validate();
+        if (!_form.IsValid)
+            return;
+        if (!_model.PlanId.HasValue)
+        {
+            await _msg.PublishErrors(trgma.PlanRequired);
+            return;
+        }
+        if (_selectedPermissions.Count == 0)
+        {
+            await _msg.PublishErrors(trgma.SelectAtLeastOnePermission);
+            return;
+        }
+        if (!string.Equals(_model.Password, _model.ConfirmPassword, StringComparison.Ordinal))
+        {
+            await _msg.PublishErrors(trgma.PasswordsDoNotMatch);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            var start = _model.StartsAt.HasValue
+                ? DateTime.SpecifyKind(_model.StartsAt.Value.Date, DateTimeKind.Local).ToUniversalTime()
+                : (DateTime?)null;
+            var request = new ProvisionCompanyRequest
+            {
+                Name = _model.Name,
+                Code = _model.Code,
+                SubscriptionPlanId = _model.PlanId.Value,
+                StartsAtUtc = start,
+                Entitlements = _selectedPermissions.ToList(),
+                Admin = new ProvisionCompanyAdminRequest
+                {
+                    FirstName = _model.FirstName,
+                    LastName = _model.LastName,
+                    UserName = _model.UserName,
+                    Email = _model.Email,
+                    PhoneNumber = _model.PhoneNumber,
+                    Password = _model.Password
+                }
+            };
+            var result = await _api.PostAsync<ProvisionCompanyResultDto, ProvisionCompanyRequest>(
+                "api/Companies/Create",
+                request,
+                trgma.FailedToProvisionCompany);
+            if (!result.Success || result.Data is null)
+                return;
+
+            await _msg.NotifySuccess(trgma.RestaurantProvisionedSuccessfully);
+            _showCreate = false;
+            _nav.NavigateTo($"/superadmin/restaurants/{result.Data.CompanyId}");
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private sealed class ProvisioningModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+        public int? PlanId { get; set; }
+        public DateTime? StartsAt { get; set; } = DateTime.Today;
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
+        public string? Email { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string Password { get; set; } = string.Empty;
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+}

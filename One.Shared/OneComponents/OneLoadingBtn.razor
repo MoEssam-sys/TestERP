@@ -1,0 +1,62 @@
+﻿@using MudBlazor
+
+<MudButton Disabled="@IsLoading" OnClick="InternalOnClick" @attributes="UserAttributes" Variant="@Variant" Color="@Color">
+    @if (IsLoading)
+    {
+        <MudProgressCircular Color="Color.Tertiary" Size="Size.Small" Indeterminate="true" Class="me-2" />
+        <MudText Class="ms-2">@LoadingText</MudText>
+    }
+    else
+    {
+        @if (ChildContent is not null)
+        {
+            @ChildContent
+        }
+        else
+        {
+            <MudText>@ButtonText</MudText>
+        }
+    }
+</MudButton>
+
+@code {
+    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public string ButtonText { get; set; } = "نفّذ";
+    [Parameter] public string LoadingText { get; set; } = "جاري التنفيذ...";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public Variant Variant { get; set; } = Variant.Filled;
+    [Parameter] public Color Color { get; set; } = Color.Primary;
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? UserAttributes { get; set; }
+
+    private bool IsLoading = false;
+
+    private async Task InternalOnClick()
+    {
+        if (OnClick.HasDelegate)
+        {
+            IsLoading = true;
+            StateHasChanged();
+            await OnClick.InvokeAsync();
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+}
+
+
+@*
+<LoadingMudButton ButtonText="احفظ" LoadingText="جاري الحفظ..." OnClick="@SaveSomething" />
+
+<LoadingMudButton LoadingText="يتم التحميل..." OnClick="@DoWork">
+    <MudIcon Icon="@Icons.Material.Filled.CloudUpload" />
+    تحميل البيانات
+</LoadingMudButton>
+
+@code {
+    private async Task SaveSomething()
+    {
+        await Task.Delay(3000); // محاكاة عملية حقيقية
+        // ... باقي الشغل
+    }
+}
+*@

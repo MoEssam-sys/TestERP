@@ -1,0 +1,10 @@
+<MudPaper Outlined="true" Class="pa-3 h-100">
+    <MudText Typo="Typo.caption" Color="Color.Secondary">@Label</MudText>
+    @if (Code) { <code dir="ltr">@Value</code> } else { <MudText Typo="Typo.body2">@Value</MudText> }
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = string.Empty;
+    [Parameter] public string Value { get; set; } = string.Empty;
+    [Parameter] public bool Code { get; set; }
+}

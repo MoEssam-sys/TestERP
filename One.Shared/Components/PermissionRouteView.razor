@@ -1,0 +1,77 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Routing
+@using One.Shared.Security
+@using One.Shared.Services
+@inject EffectivePermissionState PermissionState
+@inject One.Shared.Services.Session.IClientSession Session
+@inject NavigationManager Navigation
+
+@if (_loading)
+{
+    <LayoutView Layout="@DefaultLayout">
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+    </LayoutView>
+}
+else if (_allowed)
+{
+    <AuthorizeRouteView RouteData="@RouteData" DefaultLayout="@DefaultLayout">
+        <NotAuthorized>
+            <LayoutView Layout="@DefaultLayout">
+                <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">@loc["AccessDenied"]</MudAlert>
+            </LayoutView>
+        </NotAuthorized>
+    </AuthorizeRouteView>
+}
+else
+{
+    <LayoutView Layout="@DefaultLayout">
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="mb-3">
+            @loc["PagePermissionDenied"]
+        </MudAlert>
+        <MudButton Color="Color.Primary" OnClick="@(() => Navigation.NavigateTo("/"))">
+            @loc["Dashboard"]
+        </MudButton>
+    </LayoutView>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public RouteData RouteData { get; set; } = default!;
+
+    [Parameter]
+    public Type? DefaultLayout { get; set; }
+
+    private bool _loading;
+    private bool _allowed = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var requirement = RouteData.PageType
+            .GetCustomAttributes(typeof(PagePermissionAttribute), true)
+            .OfType<PagePermissionAttribute>()
+            .SingleOrDefault();
+        if (requirement is null)
+        {
+            _allowed = true;
+            return;
+        }
+
+        await Session.InitializeAsync();
+        if (!Session.IsAuthenticated)
+        {
+            _allowed = true;
+            return;
+        }
+
+        _loading = true;
+        try
+        {
+            var loaded = await PermissionState.RefreshAsync();
+            _allowed = loaded && PermissionState.CanView(requirement.PageKey);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

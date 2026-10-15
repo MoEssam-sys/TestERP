@@ -1,0 +1,21 @@
+﻿@using AKSoftware.Localization.MultiLanguages
+@using AKSoftware.Localization.MultiLanguages.Blazor
+@inject ILanguageContainerService _localizer
+@implements IDisposable
+
+@ChildContent
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    protected override void OnInitialized()
+    {
+        // يربط المكوّن بحدث تغيير اللغة من المكتبة
+        _localizer.InitLocalizedComponent(this);
+    }
+
+    public void Dispose()
+    {
+        // لو المكتبة بتدعم إلغاء التسجيل؛ وإلا سيبه فاضي.
+    }
+}

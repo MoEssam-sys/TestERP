@@ -1,0 +1,15 @@
+﻿<MudPaper Class="pa-3 mb-3" Elevation="1">
+    <MudGrid>
+        @ChildContent
+        <MudItem xs="12" md="3" Class="d-flex align-end justify-end">
+            <MudButton OnClick="OnApply" Color="Color.Primary">@loc["Apply"]</MudButton>
+            <MudButton OnClick="OnClear" Variant="Variant.Outlined" Class="mx-2">@loc["Clear"]</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public EventCallback OnApply { get; set; }
+    [Parameter] public EventCallback OnClear { get; set; }
+}

@@ -1,0 +1,15 @@
+.error-logs-page {
+    --diagnostic-accent: var(--mud-palette-warning);
+    max-width: 100rem;
+    background: radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--diagnostic-accent) 7%, transparent), transparent 28rem);
+}
+.filter-panel, .error-details { border-radius: 1rem; border-inline-start: .25rem solid var(--diagnostic-accent); }
+.error-details { box-shadow: 0 1rem 2.5rem color-mix(in srgb, var(--mud-palette-dark) 10%, transparent); }
+.error-logs-page code { font-size: .78rem; overflow-wrap: anywhere; }
+.message-cell { display: inline-block; max-width: 28rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stack-trace { max-height: 24rem; overflow: auto; padding: 1rem; border-radius: .75rem; background: var(--mud-palette-background-grey); border: 1px solid var(--mud-palette-lines-default); font-size: .78rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 700px) {
+    .error-heading, .detail-heading { align-items: stretch !important; flex-direction: column !important; gap: .75rem; }
+    .message-cell { max-width: 16rem; }
+    .error-details { box-shadow: none; }
+}

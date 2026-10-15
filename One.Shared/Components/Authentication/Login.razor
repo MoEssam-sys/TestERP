@@ -1,0 +1,180 @@
+@page "/login"
+@layout One.Shared.Components.Layout.AuthLayout
+@using One.Domain.DTOs
+@using One.Domain.DTOs.Identity
+@using One.Shared.Services.Logging
+@using One.Shared.Services.Platform
+@using One.Shared.Services.Session
+@inject IClientStorage ClientStorage
+@inject IClientSession Session
+@inject IClientLogger ClientLogger
+
+@if (_initializing)
+{
+    <div class="auth-status-card" role="status">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        <p>@trgma.CheckingSession</p>
+    </div>
+}
+else
+{
+    <div class="auth-card-header">
+        <h2>@trgma.EmployeeLogin</h2>
+        <p>@trgma.EmployeeLoginDescription</p>
+    </div>
+
+    <div class="auth-context-card">
+        <MudIcon Icon="@Icons.Material.Outlined.Apartment" />
+        <div>
+            <span>@trgma.SelectedWorkspace</span>
+            <strong>@_companyName · @_companyCode</strong>
+        </div>
+    </div>
+
+    <EditForm Model="_model" OnSubmit="HandleLoginAsync">
+        <MudTextField @bind-Value="_model.Identifier"
+                      Label="@trgma.UsernameOrEmail"
+                      Placeholder="@trgma.UsernameOrEmailPlaceholder"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Outlined.PersonOutline"
+                      Variant="Variant.Outlined"
+                      Immediate="true"
+                      Disabled="_loading"
+                      Class="auth-field" />
+
+        <MudTextField @bind-Value="_model.Password"
+                      Label="@trgma.Password"
+                      InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                      Adornment="Adornment.End"
+                      AdornmentIcon="@(_showPassword ? Icons.Material.Outlined.VisibilityOff : Icons.Material.Outlined.Visibility)"
+                      AdornmentAriaLabel="@(_showPassword ? trgma.HidePassword : trgma.ShowPassword)"
+                      OnAdornmentClick="TogglePasswordVisibility"
+                      Variant="Variant.Outlined"
+                      Immediate="true"
+                      Disabled="_loading"
+                      Class="auth-field" />
+
+        <div class="auth-link-row">
+            <MudLink Href="/forgot-password" Class="auth-link">@trgma.ForgotPassword</MudLink>
+            <MudLink Href="/onboarding" Class="auth-link">
+                <MudIcon Icon="@Icons.Material.Outlined.SwapHoriz" Size="Size.Small" />
+                @trgma.ChangeCompany
+            </MudLink>
+        </div>
+
+        <MudButton ButtonType="ButtonType.Submit"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   FullWidth="true"
+                   Disabled="_loading"
+                   StartIcon="@(_loading ? null : Icons.Material.Outlined.Login)"
+                   Class="auth-primary-button">
+            @if (_loading)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+                @trgma.SigningIn
+            }
+            else
+            {
+                @trgma.SignInToWorkspace
+            }
+        </MudButton>
+    </EditForm>
+
+    <div class="auth-divider auth-divider-label">@trgma.Administration</div>
+
+    <MudButton Href="/superadmin-login"
+               Variant="Variant.Text"
+               Color="Color.Primary"
+               FullWidth="true"
+               StartIcon="@Icons.Material.Outlined.AdminPanelSettings"
+               Class="auth-secondary-button">
+        @trgma.LoginAsSuperAdmin
+    </MudButton>
+}
+
+@code {
+    private readonly LoginModel _model = new();
+    private string _companyCode = string.Empty;
+    private string _companyName = string.Empty;
+    private bool _initializing = true;
+    private bool _loading;
+    private bool _showPassword;
+
+    protected override void OnInitialized() => _localizer.InitLocalizedComponent(this);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await Session.InitializeAsync();
+        if (Session.IsAuthenticated)
+        {
+            _nav.NavigateTo("/");
+            return;
+        }
+
+        _companyCode = await ClientStorage.GetAsync("company_code") ?? string.Empty;
+        _companyName = await ClientStorage.GetAsync("company_name") ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(_companyCode))
+        {
+            _nav.NavigateTo("/onboarding");
+            return;
+        }
+
+        _initializing = false;
+        StateHasChanged();
+    }
+
+    private void TogglePasswordVisibility() => _showPassword = !_showPassword;
+
+    private async Task HandleLoginAsync()
+    {
+        if (_loading)
+            return;
+        if (string.IsNullOrWhiteSpace(_model.Identifier))
+        {
+            await _msg.PublishErrors(trgma.PleaseEnterUsernameOrEmail);
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_model.Password))
+        {
+            await _msg.PublishErrors(trgma.PleaseEnterPassword);
+            return;
+        }
+
+        _loading = true;
+        try
+        {
+            var identifier = _model.Identifier.Trim();
+            var login = new LoginDto
+            {
+                Email = identifier.Contains('@') ? identifier : string.Empty,
+                UserName = identifier.Contains('@') ? string.Empty : identifier,
+                Password = _model.Password,
+                CompanyCode = _companyCode
+            };
+            var result = await _api.PostAsync<AuthResponseDto, LoginDto>(
+                "api/Authentication/Login",
+                login,
+                trgma.FailedTo);
+            if (!result.Success || result.Data is null)
+                return;
+
+            await Session.SignInAsync(result.Data.Token, result.Data.RefreshToken);
+            await ClientLogger.LogInfo(trgma.UserLoggedInSuccessfully, action: "Login");
+            _nav.NavigateTo("/");
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private sealed class LoginModel
+    {
+        public string Identifier { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+}

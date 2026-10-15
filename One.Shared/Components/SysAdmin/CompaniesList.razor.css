@@ -1,0 +1,31 @@
+.companies-page {
+    max-width: 96rem;
+}
+
+.company-list,
+.provisioning-form,
+.form-section {
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 1rem;
+}
+
+.company-search {
+    max-width: 28rem;
+}
+
+@media (max-width: 700px) {
+    .page-heading,
+    .heading-actions,
+    .plan-summary,
+    .permission-heading,
+    .form-actions {
+        align-items: stretch !important;
+        flex-direction: column !important;
+        gap: .75rem;
+    }
+
+    .provisioning-form,
+    .form-section {
+        padding: 1rem !important;
+    }
+}

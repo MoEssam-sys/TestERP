@@ -1,0 +1,175 @@
+@page "/superadmin/dashboard"
+@using One.Domain.DTOs
+@attribute [One.Shared.Security.PagePermission(One.Domain.Constants.PermissionCatalogKeys.Pages.SystemDashboard)]
+@using One.Shared.Services
+@inject NavigationManager _nav
+@inject MessagesCenter _msg
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "SuperAdmin")]
+
+    <MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
+        <MudText Typo="Typo.h4" GutterBottom="true" Color="Color.Primary">@trgma.SuperAdminDashboard</MudText>
+        <MudText Typo="Typo.subtitle1" Class="mb-4">@trgma.OverviewRegisterCompaniesAndStats</MudText>
+
+        @* === Loading State === *@
+        @if (_loading)
+        {
+            <MudStack AlignItems="AlignItems.Center" Class="my-8">
+                <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+                <MudText Typo="Typo.body1" Class="mt-2">@trgma.LoadingDashboardData</MudText>
+            </MudStack>
+        }
+        @* === Error State === *@
+        else if (_hasError)
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4" Variant="Variant.Filled">
+                <MudText Typo="Typo.body1"><strong>@trgma.FailedToLoadDashboard:</strong></MudText>
+                <MudText Typo="Typo.body2">@_errorMessage</MudText>
+            </MudAlert>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(async () => await LoadData())" StartIcon="@Icons.Material.Filled.Refresh">
+                @trgma.TryAgain
+            </MudButton>
+        }
+        @* === Success State === *@
+        else
+        {
+            <!-- Metrics / Cards Overview -->
+            <MudGrid Class="mb-4">
+                <MudItem xs="12" sm="4">
+                    <MudCard Elevation="3">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">@trgma.TotalRestaurants</MudText>
+                            <MudText Typo="Typo.h3" Color="Color.Info">@_dashboard.TotalCompanies</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudCard Elevation="3">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">@trgma.TotalUsers</MudText>
+                            <MudText Typo="Typo.h3" Color="Color.Success">@_dashboard.TotalUsers</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudCard Elevation="3">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6">@trgma.TotalAdmins</MudText>
+                            <MudText Typo="Typo.h3" Color="Color.Warning">@_dashboard.TotalAdmins</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+
+            <!-- Search & Filter -->
+            <MudGrid Class="align-center mb-4">
+                <MudItem xs="12" sm="6" md="4">
+                    <MudTextField T="string" Value="_searchString" ValueChanged="OnSearchChanged"
+                                  Placeholder="@trgma.SearchRestaurantPlaceholder" Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" DebounceInterval="350" />
+                </MudItem>
+                 <MudItem xs="12" sm="6" md="4">
+                     <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddBusiness" OnClick="@(() => _nav.NavigateTo("/sysadmin/restaurants"))">@trgma.RestaurantsManagement</MudButton>
+                </MudItem>
+            </MudGrid>
+
+            <!-- Company Cards List -->
+            @if (_dashboard.Companies.Count == 0)
+            {
+                <MudAlert Severity="Severity.Info">@trgma.NoCompaniesFound</MudAlert>
+            }
+            else
+            {
+                <MudGrid>
+                    @foreach (var company in _dashboard.Companies)
+                    {
+                        <MudItem xs="12" sm="6" md="4" lg="3">
+                            <MudCard Elevation="4" Class="d-flex flex-column" Style="height: 100%; border-left: 5px solid var(--mud-palette-primary);">
+                                <MudCardHeader>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">@company.Name</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@trgma.Code: @company.Code</MudText>
+                                    </CardHeaderContent>
+                                    <CardHeaderActions>
+                                        <MudIconButton Icon="@Icons.Material.Filled.ArrowForward" Color="Color.Default" />
+                                    </CardHeaderActions>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <MudStack Row="true" Spacing="4">
+                                        <MudText Typo="Typo.body2">@trgma.Users: <strong>@company.UsersCount</strong></MudText>
+                                        <MudText Typo="Typo.body2">@trgma.Admins: <strong>@company.AdminsCount</strong></MudText>
+                                    </MudStack>
+                                    <MudText Typo="Typo.body2" Class="mt-2" Color="@(company.IsActive ? Color.Success : Color.Error)">
+                                        @trgma.Status: @(company.IsActive ? trgma.Active : trgma.Inactive)
+                                    </MudText>
+                                </MudCardContent>
+                                <MudCardActions>
+                                    <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="@(() => _nav.NavigateTo($"/superadmin/restaurants/{company.Id}"))">@trgma.ViewDetails</MudButton>
+                                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => _nav.NavigateTo($"/register-user/{company.Id}"))">@trgma.AddUser</MudButton>
+                                </MudCardActions>
+                            </MudCard>
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+        }
+    </MudContainer>
+
+@code {
+    private bool _loading = true;
+    private bool _hasError = false;
+    private string _errorMessage = "";
+    private CompanyDashboardDto _dashboard = new();
+    private string _searchString = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        System.Diagnostics.Debug.WriteLine("[SuperAdminDashboard] OnInitializedAsync started");
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        _hasError = false;
+        _errorMessage = "";
+        StateHasChanged();
+
+        try
+        {
+            var route = "api/Companies/dashboard?take=12";
+            if (!string.IsNullOrWhiteSpace(_searchString))
+                route += $"&search={Uri.EscapeDataString(_searchString.Trim())}";
+            var result = await _api.GetAsync<CompanyDashboardDto>(
+                route,
+                trgma.FailedToLoadDashboard);
+
+            if (result.Success && result.Data != null)
+            {
+                _dashboard = result.Data;
+            }
+            else
+            {
+                _hasError = true;
+                _errorMessage = result.Messages?.FirstOrDefault() ?? trgma.FailedToLoadDashboard;
+                System.Diagnostics.Debug.WriteLine($"[SuperAdminDashboard] API returned error: {_errorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            _hasError = true;
+            _errorMessage = trgma.FailedToLoadDashboard;
+            await _msg.ExceptionHandle(trgma.FailedToLoadDashboard, ex);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnSearchChanged(string value)
+    {
+        _searchString = value;
+        await LoadData();
+    }
+}

@@ -1,0 +1,197 @@
+﻿@using One.Domain.Enums
+@using One.Shared.Themes.MudBlazorThemes
+@using One.Shared.Services.Platform
+@using One.Shared.Services.Session
+@inject IClientSession Session
+@inject IClientStorage _clientStorage
+@inject EffectivePermissionState PermissionState
+@inherits LayoutComponentBase
+
+@if (_initializing)
+{
+    <OneLoader Visible="true" Text="@trgma.Loading" LoaderType="LoaderType.OneERP" />
+}
+else
+{
+<MudLayout>
+
+    <!-- AppBar -->
+    <MudAppBar @key="_localizer.CurrentCulture" Elevation="1" Color="Color.Primary">
+        <!-- زرار فتح/قفل الـ Drawer -->
+        <MudTooltip Text="@trgma.OpenCloseDrawer" Color="Color.Primary" Placement="Placement.Bottom" Arrow="true">
+        <MudIconButton OnClick="@((e) => DrawerToggle())"
+                       Edge="Edge.Start"
+                       Color="Color.Inherit"
+                       Icon="@Icons.Material.Filled.Menu" />
+        </MudTooltip>
+
+        <!-- لوجو أو عنوان -->
+        <MudText Typo="Typo.h6" Class="ml-3 fw-bold">
+            One-ERP 🏪
+        </MudText>
+
+        <MudSpacer />
+
+        <!-- زر تغيير اللغة -->
+        <MudTooltip Text="@(IsArabic ? trgma.SwitchToEnglish : trgma.SwitchToArabic)" Color="Color.Primary" Placement="Placement.Bottom" Arrow="true">
+            <MudIconButton Color="Color.Inherit"
+                           Icon="@Icons.Material.Filled.Translate"
+                           OnClick="@ToggleLang" />
+        </MudTooltip>
+
+        <!-- زر تغيير الـ Theme -->
+        <MudTooltip Text="@trgma.ChangeStyle" Color="Color.Primary" Placement="Placement.Bottom" Arrow="true">
+        <MudIconButton Color="Color.Inherit"
+                       Icon="@(UI.IsDark ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"
+                       OnClick="@(() => UI.ToggleDark())" />
+        </MudTooltip>
+
+        <!-- زر تسجيل الخروج -->
+        <MudMenu Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit">
+            @if (IsSuperAdmin)
+            {
+                <MudMenuItem Href="/sysadmin/companies" Icon="@Icons.Material.Filled.Business">@trgma.ManageCompanies</MudMenuItem>
+                <MudMenuItem Href="/sysadmin/subscription-plans" Icon="@Icons.Material.Filled.CardMembership">@trgma.SubscriptionPlans</MudMenuItem>
+                <PermissionView PageKey="@One.Domain.Constants.PermissionCatalogKeys.Pages.RegisterUser"
+                                ActionKey="@One.Domain.Constants.PermissionCatalogKeys.Actions.Create">
+                    <MudMenuItem Href="/register-user" Icon="@Icons.Material.Filled.PersonAdd">@trgma.CreateUser</MudMenuItem>
+                </PermissionView>
+                <MudDivider />
+            }
+            else if (IsUserAdmin)
+            {
+                <PermissionView PageKey="@One.Domain.Constants.PermissionCatalogKeys.Pages.RegisterUser"
+                                ActionKey="@One.Domain.Constants.PermissionCatalogKeys.Actions.Create">
+                    <MudMenuItem Href="/register-user" Icon="@Icons.Material.Filled.PersonAdd">@trgma.RegisterNewUser</MudMenuItem>
+                </PermissionView>
+                <MudDivider />
+            }
+            <MudMenuItem OnClick="@Logout" Icon="@Icons.Material.Filled.Logout">@trgma.LogOut</MudMenuItem>
+        </MudMenu>
+    </MudAppBar>
+
+        @if (Session.IsAuthenticated)
+    {
+    <!-- Drawer -->
+    <MudDrawer @bind-Open="_drawerOpen"
+               ClipMode="DrawerClipMode.Always"
+               Elevation="2"
+               Anchor="@(IsArabic ? Anchor.Right : Anchor.Left)">
+        <NavMenu @key="_localizer.CurrentCulture" />
+    </MudDrawer>
+    }
+    <!-- Main Content -->
+    <MudMainContent>
+        <MudContainer Class="mt-4 px-4" MaxWidth="MaxWidth.False">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+
+</MudLayout>
+}
+
+@code {
+    private bool _drawerOpen = true;
+    private bool _initializing = true;
+    private System.Security.Claims.ClaimsPrincipal? _user;
+
+    [CascadingParameter]
+    private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState>? AuthState { get; set; }
+
+    // Fix #8: Use AuthenticationState claims instead of manual JWT parsing
+    private bool IsUserAdmin => _user?.IsInRole("CompanyAdmin") == true || _user?.IsInRole("Admin") == true;
+    private bool IsSuperAdmin => _user?.IsInRole("SuperAdmin") == true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Show loader while initializing
+        _initializing = true;
+        StateHasChanged();
+        await Session.InitializeAsync();
+
+        _user = Session.User;
+
+        _localizer.InitLocalizedComponent(this);
+        await SetLanguage(LanguageState.Arabic);
+
+        UI.SetRtl(IsArabic);
+
+        // Onboarding Check - Skip for SuperAdmin (they don't need a company code)
+        try {
+            // SuperAdmin check - if already logged in as SuperAdmin, skip onboarding and FORCE dashboard
+            if (IsSuperAdmin)
+            {
+                 var uri = _nav.ToAbsoluteUri(_nav.Uri);
+                 // If on root or onboarding, go to dashboard
+                 if (uri.AbsolutePath.Equals("/") || uri.AbsolutePath.Contains("onboarding") || uri.AbsolutePath.Contains("login"))
+                 {
+                     _initializing = false;
+                     StateHasChanged();
+                     _nav.NavigateTo("/superadmin/dashboard");
+                     return;
+                 }
+            }
+            else
+            {
+                var code = await _clientStorage.GetAsync("company_code");
+                if (string.IsNullOrEmpty(code))
+                {
+                    // To avoid infinite loop if already on onboarding
+                    var uri = _nav.ToAbsoluteUri(_nav.Uri);
+                    if (!uri.AbsolutePath.Contains("onboarding") && !uri.AbsolutePath.Contains("superadmin"))
+                    {
+                        _initializing = false;
+                        StateHasChanged();
+                        _nav.NavigateTo("/onboarding");
+                        return;
+                    }
+                }
+            }
+        }
+        catch (Exception exception)
+        {
+            await _msg.ExceptionHandle("UnexpectedErrorOccurred", exception);
+        }
+
+        _initializing = false;
+    }
+
+    void DrawerToggle() => _drawerOpen = !_drawerOpen;
+
+    bool IsArabic => _localizer.CurrentCulture?.TwoLetterISOLanguageName == "ar";
+
+    private async Task SetLanguage(LanguageState lang)
+    {
+        var culture = lang switch
+        {
+            LanguageState.English => "en-US",
+            LanguageState.Arabic => "ar",
+            _ => "en-US"
+        };
+
+        _localizer.SetLanguage(System.Globalization.CultureInfo.GetCultureInfo(culture));
+
+        var rightToLeft = culture.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
+        UI.SetRtl(rightToLeft);
+        await _jsInterop.SetDocumentLanguage(culture, rightToLeft);
+        StateHasChanged();
+    }
+
+    private async Task ToggleLang()
+    {
+        if (IsArabic) await SetLanguage(LanguageState.English);
+        else await SetLanguage(LanguageState.Arabic);
+    }
+
+    private async Task Logout()
+    {
+        await _api.PostSilentlyAsync<bool, object>(
+            "api/Authentication/Logout",
+            new { });
+        PermissionState.Clear();
+        await Session.SignOutAsync();
+
+        await _msg.NotifySuccess(trgma.LoggedOutSuccessfully);
+        _nav.NavigateTo("/onboarding");
+    }
+}

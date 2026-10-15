@@ -1,0 +1,32 @@
+﻿@using System.Net.Http
+@using System.Net.Http.Json
+@using AKSoftware.Localization.MultiLanguages
+@using AKSoftware.Localization.MultiLanguages.SourceGenerator
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using AKSoftware.Localization.MultiLanguages.Blazor
+@using Microsoft.JSInterop
+@using MudBlazor
+@using One.Domain.Enums
+@using One.Domain.Localization
+@using One.Shared
+@using One.Shared.Components
+@using One.Shared.Services
+@using One.Shared.Services.Api
+@using One.Shared.Services.Session
+@using One.Shared.Services.Extenstions
+@using One.Shared.Services.Platform
+@using One.Shared.OneComponents
+@using One.Shared.Themes.MudBlazorThemes
+
+@inject IJSRuntime _jsrun
+@inject IOneApiClient _api
+@inject IKeysAccessor trgma
+@inject ILanguageContainerService _localizer
+@inject UiState UI
+@inject StateService _state
+@inject MessagesCenter _msg
+@inject JsInteropService _jsInterop
+@inject NavigationManager _nav

@@ -1,0 +1,54 @@
+@page "/sysadmin/health"
+@using One.Domain.DTOs.Logging
+@attribute [One.Shared.Security.PagePermission(One.Domain.Constants.PermissionCatalogKeys.Pages.SystemHealth)]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "SuperAdmin")]
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-4">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4 health-heading">
+        <div>
+            <MudText Typo="Typo.h4">@trgma.SystemHealth</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@trgma.SystemHealthDescription</MudText>
+        </div>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" Disabled="_loading" OnClick="LoadAsync">@trgma.Refresh</MudButton>
+    </MudStack>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Indeterminate="true" />
+    }
+    else if (_health is null)
+    {
+        <MudAlert Severity="Severity.Error">@trgma.FailedToLoadSystemHealth</MudAlert>
+    }
+    else
+    {
+        <MudAlert Severity="@(_health.Status == "Healthy" ? Severity.Success : Severity.Warning)" Variant="Variant.Filled" Class="mb-4">
+            @(_health.Status == "Healthy" ? trgma.Healthy : trgma.Degraded)
+        </MudAlert>
+        <MudGrid>
+            <MudItem xs="12" sm="6"><HealthCard Title="@trgma.IdentityDatabase" Healthy="_health.IdentityDatabaseHealthy" /></MudItem>
+            <MudItem xs="12" sm="6"><HealthCard Title="@trgma.BusinessDatabase" Healthy="_health.BusinessDatabaseHealthy" /></MudItem>
+            <MudItem xs="12" sm="6" md="4"><MetricCard Title="@trgma.ActiveRestaurants" Value="@_health.ActiveCompanies.ToString("N0")" Icon="@Icons.Material.Filled.Storefront" /></MudItem>
+            <MudItem xs="12" sm="6" md="4"><MetricCard Title="@trgma.ActiveUsers" Value="@_health.ActiveUsers.ToString("N0")" Icon="@Icons.Material.Filled.People" /></MudItem>
+            <MudItem xs="12" sm="6" md="4"><MetricCard Title="@trgma.ErrorsLast24Hours" Value="@_health.ErrorsLast24Hours.ToString("N0")" Icon="@Icons.Material.Filled.BugReport" /></MudItem>
+        </MudGrid>
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mt-4">
+            @trgma.LastChecked: @_health.CheckedAtUtc.ToLocalTime().ToString("G") · UTC @_health.CheckedAtUtc.ToString("O")
+        </MudText>
+    }
+</MudContainer>
+
+@code {
+    private SystemHealthDto? _health;
+    private bool _loading;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        var result = await _api.GetAsync<SystemHealthDto>("api/admin-monitoring/health", trgma.FailedToLoadSystemHealth);
+        _health = result.Success ? result.Data : null;
+        _loading = false;
+    }
+}

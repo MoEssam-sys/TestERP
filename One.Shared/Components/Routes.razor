@@ -1,0 +1,96 @@
+﻿@using One.Shared.Themes.MudBlazorThemes
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Routing
+@using MudBlazor
+@inject UiState UI
+@inject NavigationManager Navigation
+@inject One.Shared.Services.Session.IClientSession Session
+@inject EffectivePermissionState PermissionState
+@inject One.Shared.Services.MessagesCenter _msg
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<MudThemeProvider Theme="@CurrentTheme" IsDarkMode="@UI.IsDark" />
+
+@using Microsoft.AspNetCore.Components.Authorization
+
+<MudRTLProvider RightToLeft="@UI.IsRtl">
+    <MudPopoverProvider />
+    <MudDialogProvider />
+    <MudSnackbarProvider />
+
+    <LocalizeScope>
+        <CascadingAuthenticationState>
+            <Router AppAssembly="@typeof(Routes).Assembly">
+                <Found Context="routeData">
+                    <AppErrorBoundary>
+                        <ChildContent>
+                            <PermissionRouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
+                            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+                        </ChildContent>
+
+                        <ErrorContent>
+                            <LayoutView Layout="@typeof(Layout.MainLayout)">
+                                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mb-3">
+                                    @trgma.UnexpectedErrorOccurred
+                                </MudAlert>
+                                <MudButton Color="Color.Primary" OnClick="@(() => Navigation.NavigateTo(Navigation.Uri, replace: true))">
+                                    @trgma.TryAgain
+                                </MudButton>
+                            </LayoutView>
+                        </ErrorContent>
+                    </AppErrorBoundary>
+                </Found>
+
+                <NotFound>
+                    <LayoutView Layout="@typeof(Layout.MainLayout)">
+                        <MudAlert Severity="Severity.Warning" Dense="true">@trgma.PageNotFound</MudAlert>
+                    </LayoutView>
+                </NotFound>
+            </Router>
+        </CascadingAuthenticationState>
+    </LocalizeScope>
+</MudRTLProvider>
+
+@code {
+    private MudTheme CurrentTheme => UI.IsDark ? AppTheme.Dark : AppTheme.Light;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Session.InitializeAsync();
+        if (!Session.IsAuthenticated && !string.IsNullOrWhiteSpace(Session.RefreshToken))
+            await _api.TryRefreshSessionAsync();
+        Session.Changed += OnSessionChanged;
+        if (!Session.IsAuthenticated)
+            OnSessionChanged();
+        UI.OnChange += StateHasChanged;
+    }
+
+    private void OnSessionChanged()
+    {
+        if (Session.IsAuthenticated)
+            return;
+
+        PermissionState.Clear();
+        _ = InvokeAsync(() =>
+        {
+            var path = Navigation.ToBaseRelativePath(Navigation.Uri);
+            if (!path.StartsWith("login", StringComparison.OrdinalIgnoreCase) &&
+                !path.StartsWith("superadmin-login", StringComparison.OrdinalIgnoreCase) &&
+                !path.StartsWith("onboarding", StringComparison.OrdinalIgnoreCase) &&
+                !path.StartsWith("forgot-password", StringComparison.OrdinalIgnoreCase) &&
+                !path.StartsWith("reset-password", StringComparison.OrdinalIgnoreCase) &&
+                !path.StartsWith("register-admin", StringComparison.OrdinalIgnoreCase))
+            {
+                Navigation.NavigateTo("/login");
+            }
+        });
+    }
+
+    public void Dispose()
+    {
+        Session.Changed -= OnSessionChanged;
+        UI.OnChange -= StateHasChanged;
+    }
+
+}

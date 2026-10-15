@@ -1,0 +1,375 @@
+﻿@page "/sales/brands"
+@using System.Net.Http.Json
+@attribute [One.Shared.Security.PagePermission(One.Domain.Constants.PermissionCatalogKeys.Pages.SalesBrands)]
+@using One.Domain.Base
+@using One.Domain.DTOs
+@using One.Domain.DTOs.Sales
+@using Brands = One.Contracts.Models.BrandModel
+@using One.Shared.Services.Extenstions
+@implements IDisposable
+
+<OneBreadcrumbs BreadItems="_breadcrumbs" BreadColor="Color.Primary" />
+
+<MudGrid Class="mt-4">
+    <!-- Form -->
+    <MudItem xs="12">
+        <MudCard Class="pa-4">
+            <MudText Typo="Typo.subtitle1" Class="fw-bold mb-2">@trgma.Details</MudText>
+            <MudDivider Class="mb-3" />
+
+            <MudForm @ref="FormRef" @bind-IsValid="FormValid">
+                <MudTextField @bind-Value="FormCode"
+                              Label="@trgma.Code"
+                              Required="true"
+                              Disabled="@_isEditing"
+                              Margin="Margin.Dense"
+                              Variant="Variant.Outlined" />
+
+                <MudTextField @bind-Value="FormName"
+                              Label="@trgma.Name"
+                              Required="true"
+                              Margin="Margin.Dense"
+                              Variant="Variant.Outlined" />
+
+                <MudSwitch T="bool"
+                           @bind-Value="FormIsActive"
+                           Disabled="@_isEditing"
+                           Color="Color.Success"
+                           Class="mt-2"
+                           Label="@trgma.Active" />
+
+                <MudStack Row Class="mt-3" Spacing="2">
+                    <PermissionView PageKey="@One.Domain.Constants.PermissionCatalogKeys.Pages.SalesBrands"
+                                    ActionKey="@(_isEditing ? One.Domain.Constants.PermissionCatalogKeys.Actions.Update : One.Domain.Constants.PermissionCatalogKeys.Actions.Create)">
+                        <OneLoadingBtn ButtonText="@(_isEditing? trgma.Update: trgma.Create)"
+                                       LoadingText="@trgma.Saving"
+                                       Color="Color.Primary"
+                                       OnClick="@SaveAsync" />
+                    </PermissionView>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Secondary"
+                               OnClick="@ResetForm">
+                        @trgma.Cancel
+                    </MudButton>
+                </MudStack>
+            </MudForm>
+        </MudCard>
+    </MudItem>
+
+    <!-- Table -->
+    <MudItem xs="12">
+        <MudCard Class="pa-4">
+            <MudText Typo="Typo.subtitle1" Class="fw-bold mb-2">@trgma.BrandsList</MudText>
+            <MudDivider Class="mb-3" />
+
+            <MudDataGrid @ref="_grid"
+                         T="Brands"
+                         ServerData="ServerReload"
+                         Hover="true"
+                         Dense="true"
+                         Bordered="true"
+                         Elevation="0"
+                         Filterable="false"
+                         RowClick="OnRowClick">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">@trgma.Brands</MudText>
+                    <MudSpacer />
+                    <MudTextField T="string"
+                                  Value="_search"
+                                  ValueChanged="OnSearch"
+                                  Placeholder="@trgma.SearchByCodeOrName"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  Immediate="true"
+                                  DebounceInterval="300"
+                                  Class="mt-0" />
+                </ToolBarContent>
+
+                <Columns>
+                    <PropertyColumn T="Brands" TProperty="string" Property="x => x.Code" Title="@trgma.Code" />
+                    <PropertyColumn T="Brands" TProperty="string" Property="x => x.Name" Title="@trgma.Name" />
+                    <TemplateColumn T="Brands" Title="@trgma.Status">
+                        <CellTemplate>
+                            @if (context.Item.IsActive)
+                            {
+                                <MudChip T="@string" Color="Color.Success" Variant="Variant.Outlined">@trgma.Active</MudChip>
+                            }
+                            else
+                            {
+                                <MudChip T="@string" Color="Color.Error" Variant="Variant.Outlined">@trgma.Inactive</MudChip>
+                            }
+                            <PermissionView PageKey="@One.Domain.Constants.PermissionCatalogKeys.Pages.SalesBrands"
+                                            ActionKey="@One.Domain.Constants.PermissionCatalogKeys.Actions.Activate">
+                                <MudIconButton Icon="@(context.Item.IsActive ? Icons.Material.Filled.Block : Icons.Material.Filled.CheckCircle)"
+                                               Color="@(context.Item.IsActive ? Color.Warning : Color.Success)"
+                                               OnClick="@(() => ToggleActiveAsync(context.Item))" />
+                            </PermissionView>
+                            <PermissionView PageKey="@One.Domain.Constants.PermissionCatalogKeys.Pages.SalesBrands"
+                                            ActionKey="@One.Domain.Constants.PermissionCatalogKeys.Actions.Delete">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Class="ms-2"
+                                               OnClick="@(() => ConfirmAndDeleteAsync(context.Item))" />
+                            </PermissionView>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+
+                <PagerContent>
+                    <MudDataGridPager T="Brands" />
+                </PagerContent>
+            </MudDataGrid>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    // ====== Breadcrumb ======
+    List<BreadcrumbItem> _breadcrumbs = [];
+
+    // ====== Form ======
+    MudForm FormRef = new();
+    bool FormValid;
+    bool _isEditing = false;
+    Guid? EditingId = null;
+    byte[] EditingRowVersion = [];
+
+    string? _search;
+    string FormCode = string.Empty;
+    string FormName = string.Empty;
+    bool FormIsActive = true;
+
+    MudDataGrid<Brands>? _grid;
+
+    private readonly CancellationTokenSource _cts = new();
+    private CancellationTokenSource? _searchCts;
+
+    public void Dispose()
+    {
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _breadcrumbs = new()
+        {
+            new(trgma.Settings, href: "/settings"),
+            new(trgma.Brands, href: "/sales/brands", disabled: true)
+        };
+
+        await Task.CompletedTask;
+    }
+
+    // -------- API Calls --------
+    async Task LoadAsync(int pageNumber = 1, int pageSize = 10, string? query = null)
+    {
+        if (_grid is not null)
+            await _grid.ReloadServerData();
+    }
+
+    private async Task<GridData<Brands>> ServerReload(GridState<Brands> state)
+    {
+        var cancellationToken = _searchCts?.Token ?? _cts.Token;
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                var searchResult = await _api.PostAsync<List<Brands>, SearchRequest>(
+                    "api/sales/brands/search",
+                    new SearchRequest { Query = _search, MaxResults = 100 },
+                    trgma.SearchFailed,
+                    cancellationToken);
+                var matches = searchResult.Success ? searchResult.Data ?? [] : [];
+                return new GridData<Brands>
+                {
+                    Items = matches.Skip(state.Page * state.PageSize).Take(state.PageSize),
+                    TotalItems = matches.Count
+                };
+            }
+
+            var result = await _api.PostAsync<PagedResult<Brands>, FilterBrandRequest>(
+                "api/sales/brands/filter",
+                new FilterBrandRequest
+                {
+                    PageNumber = state.Page + 1,
+                    PageSize = state.PageSize
+                },
+                trgma.FailedToLoadData,
+                cancellationToken);
+            return new GridData<Brands>
+            {
+                Items = result.Success ? result.Data?.Items ?? [] : [],
+                TotalItems = result.Success ? result.Data?.TotalCount ?? 0 : 0
+            };
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return new GridData<Brands> { Items = Array.Empty<Brands>(), TotalItems = 0 };
+        }
+        catch (Exception ex)
+        {
+            await _msg.ExceptionHandle("UnExpectedError", ex);
+            return new GridData<Brands> { Items = Array.Empty<Brands>(), TotalItems = 0 };
+        }
+    }
+
+    // Use the DataGrid RowClick signature
+    void OnRowClick(DataGridRowClickEventArgs<Brands> e)
+    {
+        var b = e.Item ?? new();
+        EditingId = b.Id;
+        EditingRowVersion = b.RowVersion;
+        FormCode = b.Code ?? string.Empty;
+        FormName = b.Name ?? string.Empty;
+        FormIsActive = b.IsActive;
+        _isEditing = true;
+    }
+
+    async Task ResetForm()
+    {
+        EditingId = null;
+        EditingRowVersion = [];
+        FormCode = string.Empty;
+        FormName = string.Empty;
+        FormIsActive = true;
+        _isEditing = false;
+        await FormRef.ResetAsync();
+    }
+
+    // -------- Search --------
+    async Task OnSearch(string text)
+    {
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+        var searchCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token);
+        _searchCts = searchCts;
+        try
+        {
+            _search = text;
+            if (_grid is not null)
+                await _grid.ReloadServerData();
+        }
+        catch (OperationCanceledException) when (searchCts.IsCancellationRequested)
+        {
+        }
+        catch (Exception ex)
+        {
+            await _msg.ExceptionHandle("UnExpectedError", ex);
+        }
+    }
+
+    // -------- Create / Update --------
+    async Task SaveAsync()
+    {
+        await FormRef!.Validate();
+        if (!FormValid)
+        {
+            await _msg.CompleteRequiredFields();
+            return;
+        }
+
+        try
+        {
+            if (_isEditing && EditingId.HasValue)
+            {
+                // (1) Update
+                var updateDto = new UpdateBrandRequest
+                {
+                    Id = EditingId.Value,
+                    Name = FormName,
+                    IsActive = FormIsActive,
+                    RowVersion = EditingRowVersion
+                };
+
+                var upd = await _api.PutAsync<bool, UpdateBrandRequest>(
+                    "api/sales/brands/update",
+                    updateDto,
+                    trgma.UpdateFailed,
+                    _cts.Token
+                );
+
+                if (upd.Success && upd.Data == true)
+                {
+                    await _msg.UpdatedSuccessfully("Brand");
+                    await LoadAsync();
+                    await ResetForm();
+                }
+            }
+            else
+            {
+                var createDto = new CreateBrandRequest
+                {
+                    Code = FormCode,
+                    Name = FormName,
+                    IsActive = FormIsActive
+                };
+
+
+                var crt = await _api.PostAsync<Brands, CreateBrandRequest>(
+                    "api/sales/brands/create",
+                    createDto,
+                    trgma.CreationFailed,
+                    _cts.Token
+                );
+
+                if (crt.Success && crt.Data is not null)
+                {
+                    await _msg.CreatedSuccessfully("Brand");
+                    await LoadAsync();
+                    await ResetForm();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await _msg.ExceptionHandle("UnExpectedError", ex);
+        }
+    }
+
+    // -------- Delete --------
+    async Task ConfirmAndDeleteAsync(Brands row)
+    {
+        var ok = await _msg.DltConfirmMsg();
+        if (!ok) return;
+
+        try
+        {
+            var del = await _api.DeleteAsync<bool, DeleteEntityRequest<Guid>>(
+                "api/sales/brands/delete",
+                new DeleteEntityRequest<Guid>(row.Id, row.RowVersion),
+                trgma.DeleteFailed,
+                _cts.Token
+            );
+
+            if (del.Success && del.Data == true)
+            {
+                await _msg.DeletedSuccessfully("Brand");
+                await LoadAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            await _msg.ExceptionHandle("UnExpectedError", ex);
+        }
+    }
+
+    async Task ToggleActiveAsync(Brands row)
+    {
+        var dto = new ActiveBrandRequest
+        {
+            Id = row.Id,
+            IsActive = !row.IsActive,
+            RowVersion = row.RowVersion
+        };
+        var result = await _api.PutAsync<bool, ActiveBrandRequest>(
+            "api/sales/brands/active",
+            dto,
+            "FailedToUpdateActiveState",
+            _cts.Token);
+        if (result.Success)
+            await LoadAsync();
+    }
+}

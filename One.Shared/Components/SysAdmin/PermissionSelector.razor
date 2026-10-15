@@ -1,0 +1,152 @@
+@using One.Domain.DTOs.Identity
+@inject ITranslator Translator
+
+<div class="permission-selector">
+    @foreach (var module in _modules)
+    {
+        <MudPaper Outlined="true" Class="permission-module pa-3 mb-3">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudIcon Icon="@Icons.Material.Filled.Apps" Color="Color.Primary" Size="Size.Small" />
+                    <MudText Typo="Typo.subtitle1"><strong>@Translator[module.NameResourceKey]</strong></MudText>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
+                        @SelectedCount(module) / @AvailableCount(module)
+                    </MudChip>
+                </MudStack>
+                @if (!ReadOnly)
+                {
+                    <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="@(() => ToggleModuleAsync(module))">
+                        @(IsModuleSelected(module) ? trgma.ClearSelection : trgma.SelectAll)
+                    </MudButton>
+                }
+            </MudStack>
+
+            @foreach (var page in module.Pages)
+            {
+                <div class="permission-page">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="permission-page-title">
+                        <MudText Typo="Typo.body1">@Translator[page.NameResourceKey]</MudText>
+                        @if (!ReadOnly)
+                        {
+                            <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="@(() => TogglePageAsync(page))">
+                                @(IsPageSelected(page) ? trgma.Clear : trgma.SelectPage)
+                            </MudButton>
+                        }
+                    </MudStack>
+                    <div class="permission-actions">
+                        @foreach (var action in page.Actions)
+                        {
+                            <MudCheckBox T="bool"
+                                         Value="@IsSelected(page.Key, action.Key)"
+                                         ValueChanged="@(value => ToggleAsync(page.Key, action.Key, value))"
+                                         Label="@Translator[action.NameResourceKey]"
+                                         ReadOnly="ReadOnly"
+                                         Color="Color.Primary"
+                                         Size="Size.Small" />
+                        }
+                    </div>
+                </div>
+            }
+        </MudPaper>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<PermissionCatalogModuleDto> Modules { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public IReadOnlyCollection<PermissionSelectionDto> Selected { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<IReadOnlyList<PermissionSelectionDto>> SelectedChanged { get; set; }
+
+    [Parameter]
+    public bool ReadOnly { get; set; }
+
+    private IReadOnlyList<PermissionCatalogModuleDto> _modules = [];
+    private HashSet<PermissionSelectionDto> _selectedSet = [];
+
+    protected override void OnParametersSet()
+    {
+        _modules = Modules
+            .Where(item => item.IsAssignableToPlans)
+            .OrderBy(item => item.SortOrder)
+            .ToList();
+        _selectedSet = Selected.ToHashSet();
+    }
+
+    private bool IsSelected(string pageKey, string actionKey)
+        => _selectedSet.Contains(new PermissionSelectionDto(pageKey, actionKey));
+
+    private bool IsPageSelected(PermissionCatalogPageDto page)
+        => page.Actions.Count > 0 && page.Actions.All(action => IsSelected(page.Key, action.Key));
+
+    private bool IsModuleSelected(PermissionCatalogModuleDto module)
+        => module.Pages.SelectMany(page => page.Actions).Any() && module.Pages.All(IsPageSelected);
+
+    private int SelectedCount(PermissionCatalogModuleDto module)
+        => module.Pages.Sum(page => page.Actions.Count(action => IsSelected(page.Key, action.Key)));
+
+    private static int AvailableCount(PermissionCatalogModuleDto module)
+        => module.Pages.Sum(page => page.Actions.Count);
+
+    private async Task ToggleAsync(string pageKey, string actionKey, bool selected)
+    {
+        if (ReadOnly)
+            return;
+
+        var next = _selectedSet.ToHashSet();
+        var permission = new PermissionSelectionDto(pageKey, actionKey);
+        if (selected)
+            next.Add(permission);
+        else
+            next.Remove(permission);
+
+        await PublishAsync(next);
+    }
+
+    private async Task TogglePageAsync(PermissionCatalogPageDto page)
+    {
+        var next = _selectedSet.ToHashSet();
+        var select = !IsPageSelected(page);
+        foreach (var action in page.Actions)
+        {
+            var permission = new PermissionSelectionDto(page.Key, action.Key);
+            if (select)
+                next.Add(permission);
+            else
+                next.Remove(permission);
+        }
+
+        await PublishAsync(next);
+    }
+
+    private async Task ToggleModuleAsync(PermissionCatalogModuleDto module)
+    {
+        var next = _selectedSet.ToHashSet();
+        var select = !IsModuleSelected(module);
+        foreach (var page in module.Pages)
+        {
+            foreach (var action in page.Actions)
+            {
+                var permission = new PermissionSelectionDto(page.Key, action.Key);
+                if (select)
+                    next.Add(permission);
+                else
+                    next.Remove(permission);
+            }
+        }
+
+        await PublishAsync(next);
+    }
+
+    private async Task PublishAsync(HashSet<PermissionSelectionDto> next)
+    {
+        _selectedSet = next;
+        await SelectedChanged.InvokeAsync(next
+            .OrderBy(item => item.PageKey)
+            .ThenBy(item => item.ActionKey)
+            .ToList());
+    }
+}

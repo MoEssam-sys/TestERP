@@ -1,0 +1,378 @@
+@page "/superadmin/companies/{CompanyId:int}"
+@page "/superadmin/restaurants/{CompanyId:int}"
+@using One.Domain.DTOs
+@attribute [One.Shared.Security.PagePermission(One.Domain.Constants.PermissionCatalogKeys.Pages.CompanyDetails)]
+@using One.Domain.DTOs.Identity
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "SuperAdmin")]
+
+<MudContainer MaxWidth="MaxWidth.False" Class="company-details-page py-4">
+    <MudBreadcrumbs Items="_breadcrumbs" Class="mb-4" />
+
+    @if (_loading)
+    {
+        <MudSkeleton Height="150px" Class="mb-4" />
+        <MudSkeleton Height="320px" />
+    }
+    else if (_loadFailed || _company is null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-3">@trgma.RestaurantNotFound</MudAlert>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => _nav.NavigateTo("/sysadmin/restaurants"))">
+            @trgma.ManageCompanies
+        </MudButton>
+    }
+    else
+    {
+        <MudPaper Elevation="2" Class="company-hero pa-4 mb-4">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="company-hero-content">
+                <div>
+                    <MudText Typo="Typo.h4">@_company.Name</MudText>
+                    <MudText Typo="Typo.body1" Color="Color.Secondary">@trgma.Code: <strong>@_company.Code</strong></MudText>
+                </div>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="company-hero-actions">
+                    <MudChip T="string" Color="@(_company.IsActive ? Color.Success : Color.Error)" Icon="@(_company.IsActive ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Block)">
+                        @(_company.IsActive ? trgma.Active : trgma.Inactive)
+                    </MudChip>
+                    <MudButton Variant="Variant.Outlined" Color="@(_company.IsActive ? Color.Error : Color.Success)"
+                               StartIcon="@(_company.IsActive ? Icons.Material.Filled.Block : Icons.Material.Filled.CheckCircle)"
+                               OnClick="ToggleCompanyStatusAsync">
+                        @(_company.IsActive ? trgma.DisableRestaurant : trgma.EnableRestaurant)
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd"
+                               OnClick="@(() => _nav.NavigateTo($"/register-user/{CompanyId}"))">
+                        @trgma.AddUser
+                    </MudButton>
+                </MudStack>
+            </MudStack>
+        </MudPaper>
+
+        @if (CurrentSubscription is null)
+        {
+            <MudAlert Severity="Severity.Warning" Class="mb-4">@trgma.NoSubscriptionFound</MudAlert>
+        }
+        else
+        {
+            @if (IsExpiringSoon(CurrentSubscription))
+            {
+                <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.Schedule" Class="mb-4">
+                    @trgma.SubscriptionExpiringSoon — @CurrentSubscription.EndsAtUtc.ToLocalTime().ToString("d")
+                </MudAlert>
+            }
+
+            <MudPaper Elevation="2" Class="subscription-card pa-4 mb-4">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3 subscription-heading">
+                    <div>
+                        <MudText Typo="Typo.overline" Color="Color.Secondary">@trgma.CurrentSubscription</MudText>
+                        <MudText Typo="Typo.h5">@CurrentSubscription.PlanName</MudText>
+                        <MudText Typo="Typo.caption">@CurrentSubscription.PlanCode</MudText>
+                    </div>
+                    <MudStack Row="true" Spacing="1">
+                        <MudChip T="string" Color="@StatusColor(CurrentSubscription.Status)">@StatusText(CurrentSubscription.Status)</MudChip>
+                        <MudChip T="string" Variant="Variant.Outlined" Color="@(CurrentSubscription.IsCustomized ? Color.Warning : Color.Default)">
+                            @(CurrentSubscription.IsCustomized ? trgma.CustomizedPermissions : trgma.BasedOnPlanPermissions)
+                        </MudChip>
+                    </MudStack>
+                </MudStack>
+
+                <MudGrid>
+                    <MudItem xs="6" md="3">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@trgma.StartsOn</MudText>
+                        <MudText Typo="Typo.subtitle1">@CurrentSubscription.StartsAtUtc.ToLocalTime().ToString("d")</MudText>
+                    </MudItem>
+                    <MudItem xs="6" md="3">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@trgma.ExpiresOn</MudText>
+                        <MudText Typo="Typo.subtitle1">@CurrentSubscription.EndsAtUtc.ToLocalTime().ToString("d")</MudText>
+                    </MudItem>
+                    <MudItem xs="6" md="3">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@trgma.Price</MudText>
+                        <MudText Typo="Typo.subtitle1">@CurrentSubscription.PriceSnapshot.ToString("N2") @CurrentSubscription.CurrencySnapshot</MudText>
+                    </MudItem>
+                    <MudItem xs="6" md="3">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@trgma.Entitlements</MudText>
+                        <MudText Typo="Typo.subtitle1">@CurrentSubscription.Entitlements.Count</MudText>
+                    </MudItem>
+                </MudGrid>
+
+                <MudDivider Class="my-4" />
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3 permission-editor-heading">
+                    <div>
+                        <MudText Typo="Typo.h6">@trgma.RestaurantModulePermissions</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@trgma.FutureModulesPermissionHint</MudText>
+                    </div>
+                    @if (!_editingPermissions)
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" OnClick="StartPermissionEdit">@trgma.EditPermissions</MudButton>
+                    }
+                </MudStack>
+                <PermissionSelector Modules="_catalog"
+                                    Selected="@(_editingPermissions ? _editedPermissions : CurrentSubscription.Entitlements)"
+                                    SelectedChanged="OnPermissionsChanged"
+                                    ReadOnly="@(!_editingPermissions)" />
+                @if (_editingPermissions)
+                {
+                    <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2" Class="mt-3 permission-actions">
+                        <MudButton Variant="Variant.Text" Disabled="_savingPermissions" OnClick="CancelPermissionEdit">@trgma.Cancel</MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save"
+                                   Disabled="@(_savingPermissions || _editedPermissions.Count == 0)" OnClick="SavePermissionsAsync">@trgma.SavePermissions</MudButton>
+                    </MudStack>
+                }
+            </MudPaper>
+        }
+
+        <MudGrid>
+            <MudItem xs="12" lg="7">
+                <MudPaper Elevation="1" Class="details-panel pa-3">
+                    <MudText Typo="Typo.h6" Class="mb-3">@trgma.RegisteredUsers</MudText>
+                    <MudTable Items="_company.Users" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
+                        <HeaderContent>
+                            <MudTh>@trgma.UserName</MudTh>
+                            <MudTh>@trgma.FullName</MudTh>
+                            <MudTh>@trgma.Email</MudTh>
+                            <MudTh>@trgma.Roles</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="@trgma.UserName">@context.UserName</MudTd>
+                            <MudTd DataLabel="@trgma.FullName">@context.FirstName @context.LastName</MudTd>
+                            <MudTd DataLabel="@trgma.Email">@context.Email</MudTd>
+                            <MudTd DataLabel="@trgma.Roles">
+                                @foreach (var role in context.Roles)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Class="me-1">@role</MudChip>
+                                }
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" lg="5">
+                <MudPaper Elevation="1" Class="details-panel pa-3">
+                    <MudText Typo="Typo.h6" Class="mb-3">@trgma.SubscriptionHistory</MudText>
+                    <MudTable Items="_subscriptions" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
+                        <HeaderContent>
+                            <MudTh>@trgma.PlanName</MudTh>
+                            <MudTh>@trgma.Status</MudTh>
+                            <MudTh>@trgma.ExpiresOn</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="@trgma.PlanName">@context.PlanName</MudTd>
+                            <MudTd DataLabel="@trgma.Status">
+                                <MudChip T="string" Size="Size.Small" Color="@StatusColor(context.Status)">@StatusText(context.Status)</MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="@trgma.ExpiresOn">@context.EndsAtUtc.ToLocalTime().ToString("d")</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudPaper Elevation="1" Class="details-panel pa-3">
+                    <MudText Typo="Typo.h6" Class="mb-3">@trgma.AuditTrail</MudText>
+                    <MudTable Items="AuditEntries" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
+                        <HeaderContent>
+                            <MudTh>@trgma.Date</MudTh>
+                            <MudTh>@trgma.Subscription</MudTh>
+                            <MudTh>@trgma.Status</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="@trgma.Date">@context.Log.OccurredAtUtc.ToLocalTime().ToString("g")</MudTd>
+                            <MudTd DataLabel="@trgma.Subscription">@context.Subscription.PlanName — @ChangeText(context.Log.ChangeType)</MudTd>
+                            <MudTd DataLabel="@trgma.Status">@StatusText(context.Log.NewStatus)</MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <MudText Class="pa-3">@trgma.NotFound</MudText>
+                        </NoRecordsContent>
+                    </MudTable>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public int CompanyId { get; set; }
+
+    private CompanyDetailsDto? _company;
+    private IReadOnlyList<CompanySubscriptionDto> _subscriptions = [];
+    private IReadOnlyList<PermissionCatalogModuleDto> _catalog = [];
+    private CompanySubscriptionDto? _currentSubscription;
+    private IReadOnlyList<AuditEntry> _auditEntries = [];
+    private List<BreadcrumbItem> _breadcrumbs = [];
+    private bool _loading = true;
+    private bool _loadFailed;
+    private bool _editingPermissions;
+    private bool _savingPermissions;
+    private IReadOnlyList<PermissionSelectionDto> _editedPermissions = [];
+
+    private CompanySubscriptionDto? CurrentSubscription => _currentSubscription;
+
+    private IReadOnlyList<AuditEntry> AuditEntries => _auditEntries;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _breadcrumbs =
+        [
+            new BreadcrumbItem(trgma.RestaurantsManagement, "/sysadmin/restaurants"),
+            new BreadcrumbItem(trgma.RestaurantDetails, null, true)
+        ];
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _loadFailed = false;
+        var companyTask = _api.GetAsync<CompanyDetailsDto>(
+            $"api/Authentication/Companies/{CompanyId}",
+            trgma.FailedToLoadData);
+        var subscriptionsTask = _api.GetAsync<IReadOnlyList<CompanySubscriptionDto>>(
+            $"api/company-subscriptions/company/{CompanyId}",
+            trgma.FailedToLoadPlans);
+        var catalogTask = _api.GetAsync<IReadOnlyList<PermissionCatalogModuleDto>>(
+            "api/permission-catalog",
+            trgma.FailedToLoadPermissions);
+        await Task.WhenAll(companyTask, subscriptionsTask, catalogTask);
+
+        var company = await companyTask;
+        var subscriptions = await subscriptionsTask;
+        var catalog = await catalogTask;
+        if (company.Success && company.Data is not null &&
+            subscriptions.Success && subscriptions.Data is not null &&
+            catalog.Success && catalog.Data is not null)
+        {
+            _company = company.Data;
+            _subscriptions = subscriptions.Data;
+            _catalog = catalog.Data.Where(module => module.IsAssignableToPlans).ToList();
+            _currentSubscription = _subscriptions.FirstOrDefault(subscription =>
+                subscription.Status is SubscriptionStatus.Pending or SubscriptionStatus.Active or SubscriptionStatus.Suspended);
+            _auditEntries = _subscriptions
+                .SelectMany(subscription => subscription.ChangeLogs.Select(log => new AuditEntry(subscription, log)))
+                .OrderByDescending(entry => entry.Log.OccurredAtUtc)
+                .ToList();
+        }
+        else
+        {
+            _company = null;
+            _subscriptions = [];
+            _catalog = [];
+            _currentSubscription = null;
+            _auditEntries = [];
+            _loadFailed = true;
+        }
+
+        _loading = false;
+    }
+
+    private async Task ToggleCompanyStatusAsync()
+    {
+        if (_company is null)
+            return;
+
+        var nextState = !_company.IsActive;
+        var confirmed = await _msg.ConfirmMsg(
+            nextState ? trgma.ConfirmEnableRestaurant : trgma.ConfirmDisableRestaurant,
+            trgma.Yes,
+            trgma.Cancel,
+            trgma.ConfirmAction);
+        if (!confirmed)
+            return;
+
+        var result = await _api.PostAsync<bool, object>(
+            $"api/Companies/{CompanyId}/toggle-status?isActive={nextState}",
+            new { },
+            trgma.FailedToUpdateCompanyStatus);
+        if (result.Success)
+        {
+            _company.IsActive = nextState;
+            await _msg.NotifySuccess(nextState ? trgma.RestaurantEnabledSuccessfully : trgma.RestaurantDisabledSuccessfully);
+        }
+    }
+
+    private void StartPermissionEdit()
+    {
+        if (CurrentSubscription is null)
+            return;
+
+        _editedPermissions = CurrentSubscription.Entitlements.ToList();
+        _editingPermissions = true;
+    }
+
+    private void CancelPermissionEdit()
+    {
+        _editingPermissions = false;
+        _editedPermissions = [];
+    }
+
+    private Task OnPermissionsChanged(IReadOnlyList<PermissionSelectionDto> permissions)
+    {
+        _editedPermissions = permissions;
+        return Task.CompletedTask;
+    }
+
+    private async Task SavePermissionsAsync()
+    {
+        if (CurrentSubscription is null || _editedPermissions.Count == 0)
+            return;
+
+        _savingPermissions = true;
+        try
+        {
+            var result = await _api.PutAsync<CompanySubscriptionDto, ReplaceCompanyEntitlementsRequest>(
+                $"api/company-subscriptions/{CurrentSubscription.Id}/entitlements",
+                new ReplaceCompanyEntitlementsRequest(_editedPermissions, CurrentSubscription.RowVersion),
+                trgma.FailedToSaveRestaurantPermissions);
+            if (!result.Success || result.Data is null)
+                return;
+
+            await _msg.NotifySuccess(trgma.RestaurantPermissionsSaved);
+            _editingPermissions = false;
+            await LoadAsync();
+        }
+        finally
+        {
+            _savingPermissions = false;
+        }
+    }
+
+    private static bool IsExpiringSoon(CompanySubscriptionDto subscription)
+        => subscription.Status == SubscriptionStatus.Active &&
+           subscription.EndsAtUtc > DateTime.UtcNow &&
+           subscription.EndsAtUtc <= DateTime.UtcNow.AddDays(30);
+
+    private Color StatusColor(SubscriptionStatus status) => status switch
+    {
+        SubscriptionStatus.Active => Color.Success,
+        SubscriptionStatus.Pending => Color.Info,
+        SubscriptionStatus.Suspended => Color.Warning,
+        SubscriptionStatus.Expired => Color.Error,
+        SubscriptionStatus.Cancelled => Color.Default,
+        _ => Color.Default
+    };
+
+    private string StatusText(SubscriptionStatus status) => status switch
+    {
+        SubscriptionStatus.Pending => trgma.SubscriptionStatusPending,
+        SubscriptionStatus.Active => trgma.SubscriptionStatusActive,
+        SubscriptionStatus.Suspended => trgma.SubscriptionStatusSuspended,
+        SubscriptionStatus.Expired => trgma.SubscriptionStatusExpired,
+        SubscriptionStatus.Cancelled => trgma.SubscriptionStatusCancelled,
+        _ => status.ToString()
+    };
+
+    private string ChangeText(SubscriptionChangeType changeType) => changeType switch
+    {
+        SubscriptionChangeType.Created => trgma.SubscriptionChangeCreated,
+        SubscriptionChangeType.Renewed => trgma.SubscriptionChangeRenewed,
+        SubscriptionChangeType.Suspended => trgma.SubscriptionChangeSuspended,
+        SubscriptionChangeType.Resumed => trgma.SubscriptionChangeResumed,
+        SubscriptionChangeType.Cancelled => trgma.SubscriptionChangeCancelled,
+        SubscriptionChangeType.Expired => trgma.SubscriptionChangeExpired,
+        SubscriptionChangeType.Activated => trgma.SubscriptionChangeActivated,
+        SubscriptionChangeType.EntitlementsChanged => trgma.SubscriptionChangeEntitlementsChanged,
+        _ => changeType.ToString()
+    };
+
+    private sealed record AuditEntry(
+        CompanySubscriptionDto Subscription,
+        SubscriptionChangeLogDto Log);
+}

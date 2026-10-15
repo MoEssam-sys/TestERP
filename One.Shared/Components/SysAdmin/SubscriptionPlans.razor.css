@@ -1,0 +1,21 @@
+.subscription-plans-page {
+    max-width: 92rem;
+}
+
+.plans-table,
+.plan-editor {
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 1rem;
+}
+
+@media (max-width: 600px) {
+    .page-heading {
+        align-items: stretch !important;
+        flex-direction: column !important;
+        gap: 1rem;
+    }
+
+    .plan-editor {
+        padding: 1rem !important;
+    }
+}

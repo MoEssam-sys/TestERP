@@ -1,0 +1,137 @@
+﻿@using Microsoft.JSInterop
+@using MudBlazor
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+@inject One.Shared.Services.Logging.IClientLogger ClientLogger
+
+<MudDialog Class="dev-error-dialog">
+    <DialogContent>
+        <div class="pa-0">
+
+            <!-- Header -->
+            <MudPaper Elevation="0" Class="px-4 py-3 d-flex align-center justify-space-between"
+                      Style="border-bottom:1px solid var(--mud-palette-divider);">
+                <div class="d-flex align-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.BugReport" Size="Size.Medium" />
+                    <MudText Typo="Typo.h6" Class="mb-0">@Title</MudText>
+                </div>
+
+                <div class="d-flex align-center gap-1">
+                    <MudTooltip Text="Copy full error (includes raw payload)">
+                        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                       Color="Color.Primary"
+                                       OnClick="CopyAsync" />
+                    </MudTooltip>
+
+                    <MudTooltip Text="Close">
+                        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                       Color="Color.Default"
+                                       OnClick="Close" />
+                    </MudTooltip>
+                </div>
+            </MudPaper>
+
+            <!-- Summary -->
+            @if (!string.IsNullOrWhiteSpace(Summary))
+            {
+                <MudPaper Elevation="0" Class="px-4 py-3"
+                          Style="border-bottom:1px solid var(--mud-palette-divider);">
+                    <MudText Typo="Typo.subtitle2" Class="mb-1">Summary</MudText>
+                    <MudText Typo="Typo.body2">@Summary</MudText>
+                </MudPaper>
+            }
+
+            <!-- Chips -->
+            @if (Chips?.Length > 0)
+            {
+                <MudPaper Elevation="0" Class="px-4 py-3"
+                          Style="border-bottom:1px solid var(--mud-palette-divider);">
+                    <MudText Typo="Typo.subtitle2" Class="mb-2">Errors</MudText>
+
+                    <MudStack Row Wrap="Wrap.Wrap" Spacing="1">
+                        @foreach (var c in Chips)
+                        {
+                            <MudChip T="string" Color="@(IsValidation ? Color.Warning : Color.Error)"
+                                     Variant="Variant.Outlined"
+                                     Size="Size.Small">
+                                @c
+                            </MudChip>
+                        }
+                    </MudStack>
+                </MudPaper>
+            }
+
+            <!-- Meta (Title / Value) -->
+            @if (Meta is not null && Meta.Count > 0)
+            {
+                <MudPaper Elevation="0" Class="px-4 py-3">
+                    <MudText Typo="Typo.subtitle2" Class="mb-2">Request Context</MudText>
+
+                    <MudGrid Spacing="2">
+                        @foreach (var kv in Meta)
+                        {
+                            <MudItem xs="12" md="6">
+                                <MudPaper Elevation="0" Class="pa-3"
+                                          Style="border:1px solid var(--mud-palette-divider); border-radius:12px;">
+                                    <MudText Typo="Typo.caption" Class="mb-1" Color="Color.Secondary">
+                                        @kv.Key
+                                    </MudText>
+
+                                    <MudText Typo="Typo.body2"
+                                             Style="direction:ltr; word-break:break-word;">
+                                        @kv.Value
+                                    </MudText>
+                                </MudPaper>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudPaper>
+            }
+
+        </div>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Close">OK</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance Dialog { get; set; } = default!;
+
+    [Parameter] public string Title { get; set; } = "DEV: HTTP Error";
+    [Parameter] public string Summary { get; set; } = string.Empty;
+
+    // Chips shown in UI (clean, user-relevant)
+    [Parameter] public string[] Chips { get; set; } = Array.Empty<string>();
+
+    // Meta shown in UI (Title/Value cards)
+    [Parameter] public Dictionary<string, string> Meta { get; set; } = new();
+
+    // Full copy text (includes raw payload: type/traceId...)
+    [Parameter] public string CopyText { get; set; } = string.Empty;
+
+    [Parameter] public bool IsValidation { get; set; } = false;
+
+    private void Close() => Dialog?.Close();
+
+    private async Task CopyAsync()
+    {
+        if (string.IsNullOrWhiteSpace(CopyText))
+        {
+            Snackbar.Add("Nothing to copy.", Severity.Info);
+            return;
+        }
+
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", CopyText);
+            Snackbar.Add("Copied to clipboard.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            await ClientLogger.LogError("Copying diagnostic details failed.", action: "CopyDiagnostics", ex: ex);
+            Snackbar.Add($"Copy failed: {ex.Message}", Severity.Error);
+        }
+    }
+}

@@ -1,0 +1,13 @@
+<MudPaper Outlined="true" Class="pa-4 rounded-lg health-status-card">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+        <MudText Typo="Typo.subtitle1">@Title</MudText>
+        <MudChip T="string" Color="@(Healthy ? Color.Success : Color.Error)" Variant="Variant.Filled">
+            @(Healthy ? trgma.Available : trgma.Unavailable)
+        </MudChip>
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+    [Parameter] public bool Healthy { get; set; }
+}

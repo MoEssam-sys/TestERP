@@ -1,0 +1,215 @@
+﻿@page "/sales/orders"
+
+@attribute [One.Shared.Security.PagePermission(One.Domain.Constants.PermissionCatalogKeys.Pages.SalesOrders)]
+
+<OnePageHeader Title="@trgma.Orders">
+    <PermissionView PageKey="@One.Domain.Constants.PermissionCatalogKeys.Pages.SalesOrders"
+                    ActionKey="@One.Domain.Constants.PermissionCatalogKeys.Actions.Create">
+        <MudButton StartIcon="@Icons.Material.Filled.Add"
+                   Color="Color.Success"
+                   OnClick="@NewOrder">@trgma.NewOrder</MudButton>
+    </PermissionView>
+</OnePageHeader>
+
+<OneFilterBar OnApply="Reload" OnClear="ClearFilters">
+    <MudItem xs="12" md="3">
+        <MudTextField @bind-Value="_filter.Search"
+                      Label="@trgma.Search"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Immediate="true"
+                      DebounceInterval="300"/>
+    </MudItem>
+    <MudItem xs="12" md="3">
+        <MudSelect T="string" @bind-Value="_filter.Status" Label="@trgma.Status" Clearable="true">
+            <MudSelectItem Value="@Open">@trgma.Open</MudSelectItem>
+            <MudSelectItem Value="@Closed">@trgma.Closed</MudSelectItem>
+            <MudSelectItem Value="@Cancelled">@trgma.Cancelled</MudSelectItem>
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="12" md="3">
+        <MudDateRangePicker @bind-DateRange="_filter.Range" Label="@trgma.DateRange"/>
+    </MudItem>
+</OneFilterBar>
+
+<MudTable T="OrderVM"
+          ServerData="Load"
+          @ref="_table"
+          OnRowClick="OnRowClick"
+          Dense="true"
+          Hover="true"
+          Bordered="true">
+    <HeaderContent>
+        <MudTh>
+            <MudTableSortLabel T="OrderVM" SortBy="@((OrderVM x) => x.Number)">
+                @trgma.Number
+            </MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="OrderVM" SortBy="@((OrderVM x) => x.Customer)">
+                @trgma.Customer
+            </MudTableSortLabel>
+        </MudTh>
+        <MudTh>@trgma.Date</MudTh>
+        <MudTh>@trgma.Total</MudTh>
+        <MudTh>@trgma.Status</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Number</MudTd>
+        <MudTd>@context.Customer</MudTd>
+        <MudTd>@context.Date.ToShortDateString()</MudTd>
+        <MudTd>@context.Total.ToString("N2")</MudTd>
+        <MudTd>
+            <MudChip T="@string"
+                     Color="@StatusColor(context.Status)"
+                     Variant="Variant.Outlined">
+                @trgma.Resource(context.Status)
+            </MudChip>
+        </MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Visibility" OnClick="@(()=>OpenDetails(context))"/>
+            <PermissionView PageKey="@One.Domain.Constants.PermissionCatalogKeys.Pages.SalesOrders"
+                            ActionKey="@One.Domain.Constants.PermissionCatalogKeys.Actions.Update">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(()=>Edit(context))"/>
+            </PermissionView>
+            <PermissionView PageKey="@One.Domain.Constants.PermissionCatalogKeys.Pages.SalesOrders"
+                            ActionKey="@One.Domain.Constants.PermissionCatalogKeys.Actions.Delete">
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(()=>Delete(context))"/>
+            </PermissionView>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+<!-- Detail Drawer -->
+<MudDrawer Open="@_detailOpen"
+           Anchor="@(UI.IsRtl ? Anchor.Left : Anchor.Right)"
+           Variant="DrawerVariant.Temporary"
+           Elevation="2"
+           Width="420px">
+    @if (_selected is not null)
+    {
+        <MudStack Class="pa-3" Spacing="2">
+            <MudText Typo="Typo.h6">@trgma.OrderDetails - @_selected.Number</MudText>
+            <MudDivider/>
+            <MudText>@trgma.Customer: @_selected.Customer</MudText>
+            <MudText>@trgma.Date: @_selected.Date.ToShortDateString()</MudText>
+            <MudText>@trgma.Status: @_selected.Status</MudText>
+            <MudTable Items="@_selected.Lines" Dense="true">
+                <HeaderContent>
+                    <MudTh>@trgma.Item</MudTh>
+                    <MudTh>@trgma.Qty</MudTh>
+                    <MudTh>@trgma.Price</MudTh>
+                    <MudTh>@trgma.Total</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Item</MudTd>
+                    <MudTd>@context.Qty</MudTd>
+                    <MudTd>@context.Price.ToString("N2")</MudTd>
+                    <MudTd>@(context.Qty * context.Price).ToString("N2")</MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudStack>
+    }
+</MudDrawer>
+
+@code {
+    MudTable<OrderVM>? _table;
+    OrderFilter _filter = new();
+    bool _detailOpen;
+    string Open = "Open";
+    string Closed = "Closed";
+    string Cancelled = "Cancelled";
+    OrderVM? _selected;
+
+
+    private Task Reload() => _table!.ReloadServerData();
+    private Task<TableData<OrderVM>> Load(TableState state, CancellationToken _)
+    {
+        var data = Seed();
+
+        if (!string.IsNullOrWhiteSpace(_filter.Search))
+            data = data.Where(x =>
+                x.Customer.Contains(_filter.Search, StringComparison.OrdinalIgnoreCase) ||
+                x.Number.Contains(_filter.Search, StringComparison.OrdinalIgnoreCase)).ToList();
+
+        if (!string.IsNullOrWhiteSpace(_filter.Status))
+            data = data.Where(x => x.Status == _filter.Status).ToList();
+
+        // Fix: Map state.SortLabel (string) to the correct property selector
+        if (state.SortDirection != SortDirection.None)
+        {
+            Func<OrderVM, object>? sortBy = null;
+            if (state.SortLabel is not null)
+            {
+                // Map the SortLabel string to the corresponding property
+                switch (state.SortLabel)
+                {
+                    case nameof(OrderVM.Number):
+                        sortBy = x => x.Number;
+                        break;
+                    case nameof(OrderVM.Customer):
+                        sortBy = x => x.Customer;
+                        break;
+                    // Add more cases if you add more sortable columns
+                    default:
+                        sortBy = x => x.Number;
+                        break;
+                }
+            }
+            else
+            {
+                sortBy = x => x.Number;
+            }
+
+            if (sortBy != null)
+            {
+                data = (state.SortDirection == SortDirection.Ascending)
+                    ? data.OrderBy(sortBy).ToList()
+                    : data.OrderByDescending(sortBy).ToList();
+            }
+        }
+
+        var total = data.Count;
+        var page = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToList();
+        return Task.FromResult(new TableData<OrderVM> { TotalItems = total, Items = page });
+    }
+
+    void OnRowClick(TableRowClickEventArgs<OrderVM> e)
+    {
+        if (e?.Item is null) return;   // يحل تحذير CS8604
+        OpenDetails(e.Item);
+    }
+
+    void OpenDetails(OrderVM o)
+    {
+        _selected = o;
+        _detailOpen = true;
+    }
+    void Edit(OrderVM o) { /* open dialog */ }
+    void Delete(OrderVM o) { /* confirm */ }
+    void NewOrder() { /* open dialog */ }
+    Task ClearFilters()
+    {
+        _filter = new();           // إعادة ضبط الفلتر
+        return Reload();           // إعادة تحميل الجدول
+    }
+    Color StatusColor(string s) => s switch
+    {
+        "Open" => Color.Warning,
+        "Closed" => Color.Success,
+        "Cancelled" => Color.Error,
+        _ => Color.Default
+    };
+
+    record OrderVM(string Number, string Customer, DateTime Date, decimal Total, string Status, List<OrderLine> Lines);
+    record OrderLine(string Item, int Qty, decimal Price);
+    class OrderFilter { public string? Search { get; set; } public string? Status { get; set; } public DateRange? Range { get; set; } }
+
+    List<OrderVM> Seed() => Enumerable.Range(1, 120).Select(i =>
+        new OrderVM($"SO-{i:0000}", $"عميل {i}", DateTime.Today.AddDays(-i),
+            i * 100,
+            i % 5 == 0 ? "Cancelled" : (i % 3 == 0 ? "Closed" : "Open"),
+            new() { new("صنف أ", 2, 50), new("صنف ب", 1, 30) }
+        )).ToList();
+}

@@ -1,0 +1,305 @@
+@page "/sysadmin/subscription-plans"
+@using One.Domain.Base
+@attribute [One.Shared.Security.PagePermission(One.Domain.Constants.PermissionCatalogKeys.Pages.SubscriptionPlans)]
+@using One.Domain.DTOs.Identity
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "SuperAdmin")]
+
+<MudContainer MaxWidth="MaxWidth.False" Class="subscription-plans-page py-4">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4 page-heading">
+        <div>
+            <MudText Typo="Typo.h4">@trgma.SubscriptionPlans</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@trgma.SubscriptionPlansDescription</MudText>
+        </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="StartCreate">
+            @trgma.CreatePlan
+        </MudButton>
+    </MudStack>
+
+    @if (_loading)
+    {
+        <MudSkeleton Height="76px" Class="mb-3" />
+        <MudSkeleton Height="280px" />
+    }
+    else if (_loadFailed)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-3">@trgma.FailedToLoadPlans</MudAlert>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync">
+            @trgma.TryAgain
+        </MudButton>
+    }
+    else
+    {
+        <MudPaper Elevation="1" Class="plans-table pa-2">
+            <MudTable Items="_plans" Hover="true" Breakpoint="Breakpoint.Sm" Loading="_loading">
+                <HeaderContent>
+                    <MudTh>@trgma.Code</MudTh>
+                    <MudTh>@trgma.PlanName</MudTh>
+                    <MudTh>@trgma.Price</MudTh>
+                    <MudTh>@trgma.Duration</MudTh>
+                    <MudTh>@trgma.Permissions</MudTh>
+                    <MudTh>@trgma.Status</MudTh>
+                    <MudTh>@trgma.Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="@trgma.Code"><strong>@context.Code</strong></MudTd>
+                    <MudTd DataLabel="@trgma.PlanName">
+                        <MudText Typo="Typo.body1">@context.Name</MudText>
+                        @if (!string.IsNullOrWhiteSpace(context.Description))
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Description</MudText>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="@trgma.Price">@context.Price.ToString("N2") @context.Currency</MudTd>
+                    <MudTd DataLabel="@trgma.Duration">@context.DurationInDays @trgma.Days</MudTd>
+                    <MudTd DataLabel="@trgma.Permissions">@context.Permissions.Count</MudTd>
+                    <MudTd DataLabel="@trgma.Status">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.IsActive ? Color.Success : Color.Default)">
+                            @(context.IsActive ? trgma.Active : trgma.Inactive)
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="@trgma.Actions">
+                        <MudStack Row="true" Spacing="1">
+                            <MudTooltip Text="@trgma.Update">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => StartEdit(context))" />
+                            </MudTooltip>
+                            <MudTooltip Text="@(context.IsActive ? trgma.DeactivatePlan : trgma.ActivatePlan)">
+                                <MudIconButton Icon="@(context.IsActive ? Icons.Material.Filled.ToggleOn : Icons.Material.Filled.ToggleOff)"
+                                               Color="@(context.IsActive ? Color.Success : Color.Default)"
+                                               Size="Size.Small"
+                                               OnClick="@(() => ToggleActiveAsync(context))" />
+                            </MudTooltip>
+                        </MudStack>
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Class="pa-4">@trgma.NoPlansFound</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        </MudPaper>
+    }
+
+    @if (_showEditor)
+    {
+        <MudPaper Elevation="4" Class="plan-editor pa-4 mt-4">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
+                <MudText Typo="Typo.h5">@(_editor.Id.HasValue ? trgma.EditPlan : trgma.CreatePlan)</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="CancelEdit" />
+            </MudStack>
+
+            <MudForm @ref="_form">
+                <MudGrid>
+                    <MudItem xs="12" md="4">
+                        <MudTextField @bind-Value="_editor.Code" Label="@trgma.Code" Required="true" MaxLength="50" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" md="8">
+                        <MudTextField @bind-Value="_editor.Name" Label="@trgma.PlanName" Required="true" MaxLength="150" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_editor.Description" Label="@trgma.Description" Lines="2" MaxLength="1000" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudNumericField T="decimal" @bind-Value="_editor.Price" Label="@trgma.Price" Min="0" Required="true" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudSelect T="string" @bind-Value="_editor.Currency" Label="@trgma.Currency" Required="true" Variant="Variant.Outlined">
+                            @foreach (var currency in Currencies)
+                            {
+                                <MudSelectItem T="string" Value="@currency">@currency</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudNumericField T="int" @bind-Value="_editor.DurationInDays" Label="@trgma.DurationInDays" Min="1" Max="3650" Required="true" Variant="Variant.Outlined" />
+                    </MudItem>
+                </MudGrid>
+
+                <MudDivider Class="my-4" />
+                <MudText Typo="Typo.h6">@trgma.PlanPermissions</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">@trgma.PlanPermissionsHint</MudText>
+                <PermissionSelector Modules="_catalog" Selected="_selectedPermissions" SelectedChanged="OnPermissionsChanged" />
+
+                <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4" Spacing="2">
+                    <MudButton Variant="Variant.Text" OnClick="CancelEdit" Disabled="_saving">@trgma.Cancel</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveAsync" Disabled="_saving">
+                        @if (_saving)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+                        }
+                        @trgma.Save
+                    </MudButton>
+                </MudStack>
+            </MudForm>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    private static readonly string[] Currencies = ["EGP", "USD", "SAR", "AED"];
+    private readonly List<SubscriptionPlanDto> _plans = [];
+    private IReadOnlyList<PermissionCatalogModuleDto> _catalog = [];
+    private IReadOnlyCollection<PermissionSelectionDto> _selectedPermissions = [];
+    private PlanEditorModel _editor = new();
+    private MudForm? _form;
+    private bool _loading = true;
+    private bool _loadFailed;
+    private bool _showEditor;
+    private bool _saving;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _loadFailed = false;
+        var plansTask = _api.GetAsync<IReadOnlyList<SubscriptionPlanDto>>(
+            "api/subscription-plans",
+            trgma.FailedToLoadPlans);
+        var catalogTask = _api.GetAsync<IReadOnlyList<PermissionCatalogModuleDto>>(
+            "api/permission-catalog",
+            trgma.FailedToLoadPermissions);
+        await Task.WhenAll(plansTask, catalogTask);
+
+        var plans = await plansTask;
+        var catalog = await catalogTask;
+        if (plans.Success && plans.Data is not null && catalog.Success && catalog.Data is not null)
+        {
+            _plans.Clear();
+            _plans.AddRange(plans.Data.OrderBy(item => item.Name));
+            _catalog = catalog.Data.Where(item => item.IsAssignableToPlans).ToList();
+        }
+        else
+        {
+            _loadFailed = true;
+        }
+
+        _loading = false;
+    }
+
+    private void StartCreate()
+    {
+        _editor = new PlanEditorModel();
+        _selectedPermissions = [];
+        _showEditor = true;
+    }
+
+    private void StartEdit(SubscriptionPlanDto plan)
+    {
+        _editor = new PlanEditorModel
+        {
+            Id = plan.Id,
+            Code = plan.Code,
+            Name = plan.Name,
+            Description = plan.Description,
+            Price = plan.Price,
+            Currency = plan.Currency,
+            DurationInDays = plan.DurationInDays,
+            RowVersion = plan.RowVersion
+        };
+        _selectedPermissions = plan.Permissions.ToHashSet();
+        _showEditor = true;
+    }
+
+    private void CancelEdit() => _showEditor = false;
+
+    private Task OnPermissionsChanged(IReadOnlyList<PermissionSelectionDto> permissions)
+    {
+        _selectedPermissions = permissions.ToHashSet();
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_form is null)
+            return;
+
+        await _form.Validate();
+        if (!_form.IsValid)
+            return;
+        if (_selectedPermissions.Count == 0)
+        {
+            await _msg.PublishErrors(trgma.SelectAtLeastOnePermission);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            Result<SubscriptionPlanDto> result;
+            var permissions = _selectedPermissions.ToList();
+            if (_editor.Id.HasValue)
+            {
+                result = await _api.PutAsync<SubscriptionPlanDto, UpdateSubscriptionPlanRequest>(
+                    $"api/subscription-plans/{_editor.Id.Value}",
+                    new UpdateSubscriptionPlanRequest(
+                        _editor.Code,
+                        _editor.Name,
+                        _editor.Description,
+                        _editor.Price,
+                        _editor.Currency,
+                        _editor.DurationInDays,
+                        permissions,
+                        _editor.RowVersion),
+                    trgma.FailedToSavePlan);
+            }
+            else
+            {
+                result = await _api.PostAsync<SubscriptionPlanDto, CreateSubscriptionPlanRequest>(
+                    "api/subscription-plans",
+                    new CreateSubscriptionPlanRequest(
+                        _editor.Code,
+                        _editor.Name,
+                        _editor.Description,
+                        _editor.Price,
+                        _editor.Currency,
+                        _editor.DurationInDays,
+                        permissions),
+                    trgma.FailedToSavePlan);
+            }
+
+            if (!result.Success)
+                return;
+
+            await _msg.NotifySuccess(_editor.Id.HasValue ? trgma.UpdatedSuccessfully : trgma.CreatedSuccessfully);
+            _showEditor = false;
+            await LoadAsync();
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task ToggleActiveAsync(SubscriptionPlanDto plan)
+    {
+        var nextState = !plan.IsActive;
+        var confirmed = await _msg.ConfirmMsg(
+            nextState ? trgma.ConfirmActivatePlan : trgma.ConfirmDeactivatePlan,
+            trgma.Yes,
+            trgma.Cancel,
+            trgma.ConfirmAction);
+        if (!confirmed)
+            return;
+
+        var result = await _api.PostAsync<SubscriptionPlanDto, SetSubscriptionPlanActiveRequest>(
+            $"api/subscription-plans/{plan.Id}/active",
+            new SetSubscriptionPlanActiveRequest(nextState, plan.RowVersion),
+            trgma.FailedToUpdateActiveState);
+        if (result.Success)
+        {
+            await _msg.NotifySuccess(trgma.UpdatedSuccessfully);
+            await LoadAsync();
+        }
+    }
+
+    private sealed class PlanEditorModel
+    {
+        public int? Id { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public decimal Price { get; set; }
+        public string Currency { get; set; } = "EGP";
+        public int DurationInDays { get; set; } = 30;
+        public string RowVersion { get; set; } = string.Empty;
+    }
+}

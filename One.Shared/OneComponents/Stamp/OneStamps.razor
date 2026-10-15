@@ -1,0 +1,675 @@
+﻿@using One.Shared.Models
+
+@inject One.Shared.Services.MessagesCenter _msg
+
+<OneLoader Visible="@OverlayLoad"
+               Text="جاري تحميل البيانات..."
+           LoaderType="LoaderType.Circles" />
+
+@* *** Buttons *** *@
+<OneButtonsBar UpdateState="UpdateState" IsSaveBtnDisabled="OverlayLoad" IsClearBtnDisabled="OverlayLoad" OnBtnClick="OneButtonsBarHandle"></OneButtonsBar>
+
+@* *** Breadcrumbs *** *@
+    <OneBreadcrumbs BreadItems="_items" BreadColor="Color.Tertiary"></OneBreadcrumbs>
+
+
+@* *** The Component *** *@
+<MudForm @ref="FormRef" @bind-IsValid="@FormSuccess" @bind-Errors="@FormErrors">
+    <!--  <MudGrid>
+
+    <MudSelect Placeholder="Select color" @bind-Value="ColorSelect">
+    <MudSelectItem Value="@Color.Tertiary" />
+    <MudSelectItem Value="@Color.Primary" />
+    <MudSelectItem Value="@Color.Secondary" />
+    <MudSelectItem Value="@Color.Info" />
+    <MudSelectItem Value="@Color.Error" />
+    <MudSelectItem Value="@Color.Warning" />
+</MudSelect>
+
+            <MudItem lg="3" md="3" sm="12" xs="12">
+                <MudAutocomplete T="Branch"
+                                @ref="BranchRef"
+                                 Value="SelectedBranch"
+                                 ValueChanged="OnBranchChange"
+                                 SearchFunc="@BranchSearch"
+                                 ToStringFunc="@(e => e == null ? null : $"{e.EnglishDesc}")"
+                                 Label="Branch"
+                                 Disabled="UpdateState"
+                                 Required="true"
+                                 Strict="false"
+                                 CoerceText="true"
+                                 Clearable="false"
+                                 SelectValueOnTab="true"
+                                 ResetValueOnEmptyText="true"
+                                 ShowProgressIndicator="true"
+                                 Margin="Margin.Dense"
+                                 Variant="@Variant.Outlined"
+                                 ProgressIndicatorColor="Color.Success">
+                </MudAutocomplete>
+            </MudItem>
+
+            <MudItem lg="3" md="3" sm="12" xs="12">
+                <MudDatePicker @ref="InvoiceDateRef" @bind-Date="SelectedInvoice.InvoiceDate"
+                           Label="Invoice Date"
+                           Editable
+                           ShowToolbar
+                           DateFormat="dd/MM/yyyy"
+                           Margin="Margin.Dense"
+                           Variant="Variant.Outlined" />
+            </MudItem>
+
+            <MudItem lg="3" md="3" sm="12" xs="12">
+                <MudSelect T="SaleType"
+                           @ref="InvoiceTypeRef" @bind-Value="SelectedInvoice.InvoiceType"
+                           Label="Invoice Type"
+                           Margin="Margin.Dense"
+                           Variant="@Variant.Outlined"
+                           AnchorOrigin="Origin.BottomCenter">
+                    <MudSelectItem Value="@(SaleType.None)">None</MudSelectItem>
+                    <MudSelectItem Value="@(SaleType.Type1)">Type 1</MudSelectItem>
+                    <MudSelectItem Value="@(SaleType.Type2)">Type 2</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+        </MudGrid>
+
+                    <MudItem lg="2" md="12" sm="12" xs="12">
+                        <MudAutocomplete T="Customer"
+                                         @ref="CustomerRef"
+                                         Value="SelectedCustomer"
+                                         ValueChanged="OnCustomerChange"
+                                         SearchFunc="@CustomerSearch"
+                                         ToStringFunc="@(e => e == null ? null : $"{e.EnglishDesc}")"
+                                         Validation="@(new Func<Customer, IEnumerable<string>> (ValidateCustomerInput))"
+                                         Disabled="ReadState"
+                                         Label="Customer"
+                                         Required
+                                         Strict="false"
+                                         CoerceText="true"
+                                         Clearable="false"
+                                         SelectValueOnTab="true"
+                                         ResetValueOnEmptyText="true"
+                                         ShowProgressIndicator="true"
+                                         Margin="Margin.Dense"
+                                         PopoverClass="CustomerList"
+                                         AdornmentColor="Color.Success"
+                                         ProgressIndicatorColor="Color.Success"
+                                         AdornmentIcon="@Icons.Material.Filled.Search"
+                                         Variant="@Variant.Outlined">
+                            <NoItemsTemplate>
+                                <MudText Align="Align.Center" Class="px-4 py-1">
+                                    @Tr(NoItemsFound)
+                                </MudText>
+                            </NoItemsTemplate>
+
+                            <BeforeItemsTemplate>
+                                <MudGrid>
+                                    <MudItem>
+                                        <b>Code</b>
+                                    </MudItem>
+
+                                    <MudItem>
+                                        <b>Name</b>
+                                    </MudItem>
+
+                                    <MudItem>
+                                        <b>Description</b>
+                                    </MudItem>
+                                </MudGrid>
+                            </BeforeItemsTemplate>
+
+                            <ItemTemplate Context="e">
+                                <MudGrid>
+                                    <MudItem lg="4" md="4" sm="6" xs="6">
+                                        <MudHighlighter Text="@e.Code" HighlightedText="@CustomerHighlightCode" Class="mud-success-text" Style="background-color:transparent;font-weight:bold"></MudHighlighter>
+                                    </MudItem>
+
+                                    <MudItem lg="4" md="4" sm="6" xs="6">
+                                        <MudHighlighter Text="@e.EnglishDesc" HighlightedText="@CustomerHighlightCode" Class="mud-success-text" Style="background-color:transparent;font-weight:bold"></MudHighlighter>
+                                    </MudItem>
+
+                                    <MudItem lg="4" md="4" sm="6" xs="6">
+                                        <MudHighlighter Text="@e.ArabicDesc" HighlightedText="@CustomerHighlightCode" Class="mud-success-text" Style="background-color:transparent;font-weight:bold"></MudHighlighter>
+                                    </MudItem>
+                                </MudGrid>
+                            </ItemTemplate>
+                        </MudAutocomplete>
+                    </MudItem>
+
+                    <MudTextField @ref="NarrationRef" @bind-Value="Narration"
+                          @onfocusin="()=>NarrationRef.SelectAsync()"
+                          Label="Narration"
+                          OnlyValidateIfDirty="true"
+                          Margin="Margin.Dense"
+                          Variant="@Variant.Outlined" />
+
+            <MudItem lg="1" md="1" sm="12" xs="12">
+                <MudNumericField @ref="PercentageRef" @bind-Value="ItemPercentage"
+                                 @onfocusin="()=>PercentageRef.SelectAsync()"
+                                 AdornmentText="%"
+                                 Placeholder="0.00"
+                                 Label="Percentage"
+                                 Margin="Margin.Dense"
+                                 HideSpinButtons="true"
+                                 Adornment="Adornment.End"
+                                 Variant="Variant.Outlined"
+                                 AdornmentColor="Color.Tertiary"></MudNumericField>
+            </MudItem>
+
+            <MudItem lg="1" md="1" sm="12" xs="12">
+                <MudIconButton OnClick="@(ModifyStateRowClick?UpdateItemAsync:CreateItemAsync)"
+                               Size="Size.Medium"
+                               Variant="Variant.Filled"
+                               Title="@(ModifyStateRowClick?"Update":"Add")"
+                               Color="@(ModifyStateRowClick?Color.Warning:Color.Success)"
+                               Icon="@(ModifyStateRowClick?Icons.Material.Outlined.Refresh:Icons.Material.Outlined.AddCircle)"></MudIconButton>
+
+            </MudItem>
+        </MudGrid>
+
+        <MudDataGrid Items="SelectedInvoice.InvoiceItemsList" T="InvoiceItem" RowClass="cursor-pointer" RowClick="RowClickEvent" Filterable="false" SortMode="@SortMode.None" Groupable="false" Dense=true Bordered=true Elevation="0" ApplyDropClassesOnDragStarted=true Hover="true" DragIndicatorIcon="@Icons.Material.Filled.DragIndicator">
+        <Columns>
+            <PropertyColumn Property="x => x.Item.Code" Title="Code" />
+            <PropertyColumn Property="x => x.Item.EnglishDesc" Title="Name" />
+            <PropertyColumn Property="x => x.Unit.EnglishDesc" Title="Unit" />
+            <PropertyColumn Property="x => RoundValue(x.DQty,2)" Format="F3" Title="QTY" CellStyleFunc="NumberStyling" />
+            <PropertyColumn Property="x => RoundValue(x.DcCost,2)" Format="F3" Title="Cost" CellStyleFunc="NumberStyling" />
+            <PropertyColumn Property="x => x.DcItemDiscount" Format="F3" Title="Discount" CellStyleFunc="NumberStyling" />
+            <PropertyColumn Property="x => x.DcVatAmount" Format="F3" Title="Vat amount" CellStyleFunc="NumberStyling" />
+            <PropertyColumn Property="x => RoundValue(x.Total,3)" Format="F3" Title="Total" CellStyleFunc="NumberStyling" />
+            <TemplateColumn Title="Actions">
+                <CellTemplate>
+                    <MudIconButton OnClick="()=>DeleteItemAsync(context.Item)" Disabled="ReadState" Size="@Size.Small" Variant="@Variant.Text" Icon="@Icons.Material.Filled.Delete" Color="@Color.Error"></MudIconButton>
+                </CellTemplate>
+            </TemplateColumn>
+        </Columns>
+    </MudDataGrid>
+     -->
+</MudForm>
+
+@* <MudTable T="FacultySelectOutput" @ref="ItemsTableRef" Items="Papa.Lists.FacultiesList"
+          ReadOnly="!UpdateState"
+          Hover="true"
+          Dense="true"
+          Striped="true"
+          Bordered="true"
+          Virtualize="true"
+          CustomFooter="true"
+          MultiSelection="false"
+          IsEditRowSwitchingBlocked="false"
+          SortLabel="@Tr("SortBy")"
+          LoadingProgressColor="Color.Tertiary">
+
+    <HeaderContent>
+        <MudTh Class="bordered"><MudTableSortLabel SortBy="new Func<FacultySelectOutput, object>(x => x.FacName)">@Tr("FacName")</MudTableSortLabel></MudTh>
+        <MudTh Class="bordered">@Tr("Gender")</MudTh>
+        <MudTh Class="bordered"><MudTableSortLabel SortBy="new Func<FacultySelectOutput, object>(x => x.Dean)">@Tr("Dean")</MudTableSortLabel></MudTh>
+        <MudTh Class="bordered"><MudTableSortLabel SortBy="new Func<FacultySelectOutput, object>(x => x.SubDean)">@Tr("SubDean")</MudTableSortLabel></MudTh>
+        <MudTh Class="bordered"><MudTableSortLabel SortBy="new Func<FacultySelectOutput, object>(x => x.Manger)">@Tr("Manger")</MudTableSortLabel></MudTh>
+        <MudTh Class="bordered"><MudTableSortLabel SortBy="new Func<FacultySelectOutput, object>(x => x.HeadStdAff)">@Tr("HeadStdAff")</MudTableSortLabel></MudTh>
+        <MudTh Class="bordered"><MudTableSortLabel SortBy="new Func<FacultySelectOutput, object>(x => x.FacImage)">@Tr("FacImage")</MudTableSortLabel></MudTh>
+        <MudTh Class="bordered"><MudTableSortLabel SortBy="new Func<FacultySelectOutput, object>(x => x.StampImage)">@Tr("StampImage")</MudTableSortLabel></MudTh>
+        <MudTh Class="bordered">@Tr("YearName")</MudTh>
+        <MudTh Class="bordered">@Tr("Actions")</MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        <MudTd DataLabel="Item Code" @onclick="() => RowSelect(context)">
+            <MudAutocomplete T="Product" PopoverClass="ItemListClass" InputId="@($"RiProduct{context.LineNum}")"
+                             Value="context.Product"
+                             ValueChanged="(v)=>ItemChange(v,context)"
+                             @onfocusin="@(() => SelectAllText($"RiProduct{context.LineNum}"))"
+                             SearchFunc="@ItemSearch"
+                             ToStringFunc="@(e=> e == null ? null : $"{e.Code}")"
+                             Dense="true"
+                             Strict="false"
+                             Required="true"
+                             Immediate="true"
+                             Underline="false"
+                             CoerceText="false"
+                             SelectValueOnTab="true"
+                             ResetValueOnEmptyText="true"
+                             ShowProgressIndicator="true"
+                             Disabled="ReadState || (int)SelectedRfq.PurCycleState >= (int)PurchaseCycleState.PO"
+                             Margin="Margin.Dense"
+                             AdornmentColor="Color.Tertiary"
+                             AnchorOrigin="Origin.BottomCenter"
+                             Adornment="@(ReadState?Adornment.None:Adornment.End)"
+                             ProgressIndicatorColor="Color.Success">
+                <NoItemsTemplate>
+                    <MudText Align="Align.Center" Class="px-4 py-1">
+                        @Tr("NoItemsFound")
+                    </MudText>
+                </NoItemsTemplate>
+
+                <BeforeItemsTemplate>
+                    <MudGrid Class="d-flex padding-top">
+                        <MudItem Class="padding-inside" lg="1" md="1">
+                            <b>@Tr("Code")</b>
+                        </MudItem>
+                        <MudItem Class="padding-inside" lg="4" md="4">
+                            <b>@Tr("EnglishDesc")</b>
+                        </MudItem>
+                        <MudItem Class="padding-inside" lg="4" md="4">
+                            <b>@Tr("ArabicDesc")</b>
+                        </MudItem>
+                    </MudGrid>
+                </BeforeItemsTemplate>
+
+                <ItemTemplate Context="e">
+                    <MudGrid Class="d-flex padding-items">
+                        <MudItem lg="1" md="1" Style="overflow:hidden;">
+                            <MudHighlighter Text="@e.Code" HighlightedText="@ItemHighlighterText" Style="background-color:gold;font-weight:bold;padding:0px;"></MudHighlighter>
+                        </MudItem>
+                        <MudItem lg="4" md="4" Style="overflow:hidden;">
+                            <MudHighlighter Text="@e.EnglishDesc" HighlightedText="@ItemHighlighterText" Style="background-color:gold;font-weight:bold;padding:0px"></MudHighlighter>
+                        </MudItem>
+                        <MudItem lg="4" md="4" Style="overflow:hidden;">
+                            <MudHighlighter Text="@e.ArabicDesc" HighlightedText="@ItemHighlighterText" Style="background-color:gold;font-weight:bold;padding:0px"></MudHighlighter>
+                        </MudItem>
+                    </MudGrid>
+                </ItemTemplate>
+            </MudAutocomplete>
+        </MudTd>
+
+        <MudTd Style="background-color:rgba(0, 0, 0, .09)" DataLabel="Item Desc" @onclick="() => RowSelect(context)">
+            <MudTextField @bind-Value="context.Product.EnglishDesc"
+                            InputId="@($"RiDesc{context.LineNum}")"
+                            OnKeyDown="@((e) => FocusNextInput(e, $"RiQty{context.LineNum}"))"
+                            @onfocusin="@(() => SelectAllText($"RiDesc{context.LineNum}"))"
+                            Required="true"
+                            Underline="false"
+                            Disabled="ReadState  || (int)SelectedRfq.PurCycleState >= (int)PurchaseCycleState.PO"
+                            Margin="Margin.Dense"></MudTextField>
+        </MudTd>
+
+        <MudTd DataLabel="Unit" @onclick="() => RowSelectUnit(context)">
+            <MudSelect T="Unit"
+                       Value="context.Unit"
+                       ValueChanged="(value)=> UnitChanged(value,context)"
+                       InputId="@($"RiUnit{context.LineNum}")"
+                       @onfocusin="@(() => SelectAllText($"RiUnit{context.LineNum}"))"
+                       Dense="true"
+                       Strict="false"
+                       Required="true"
+                       Underline="false"
+                       Disabled="ReadState  || (int)SelectedRfq.PurCycleState >= (int)PurchaseCycleState.PO"
+                       Margin="Margin.Dense"
+                       Adornment="Adornment.End"
+                       AdornmentColor="Color.Tertiary"
+                       AnchorOrigin="Origin.BottomCenter"
+                       ToStringFunc="@(e=> e==null?null : EnglishCulture?e.EnglishDesc:e.ArabicDesc)">
+                @if (context.UnitsList.IsNotNullOrEmptyList())
+                {
+                    @foreach (var item in context.UnitsList)
+                    {
+                        <MudSelectItem Value="@item">@(EnglishCulture ? item.EnglishDesc : item.ArabicDesc)</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+        </MudTd>
+
+        <MudTd DataLabel="Qty" @onclick="() => RowSelect(context)">
+            <MudNumericField @bind-Value="context.Qty" T="decimal"
+                             InputId="@($"RiQty{context.LineNum}")"
+                             OnKeyDown="@((e) => FocusNextInput(e, $"RiFreeQty{context.LineNum}"))"
+                             @onfocusin="@(() => SelectAllText($"RiQty{context.LineNum}"))"
+                             TextChanged="() => CalculationTextChange(context)"
+                             Min="0"
+                             Format="N0"
+                             Underline="false"
+                             Disabled="ReadState  || (int)SelectedRfq.PurCycleState >= (int)PurchaseCycleState.PO"
+                             Class="NoRight"
+                             Margin="Margin.Dense"
+                             HideSpinButtons="true"></MudNumericField>
+        </MudTd>
+
+        <MudTd DataLabel="Total">
+            <MudTextField @bind-Value="context.TotalDiscountAmountFC"
+                          Format="N4"
+                          Disabled="true"
+                          Underline="false"
+                          ShrinkLabel="true"
+                          Class="NoRight"
+                          Margin="Margin.Dense"></MudTextField>
+        </MudTd>
+
+        <MudTd DataLabel="Narration" @onclick="() => RowSelect(context)">
+            <MudTextField @bind-Value="context.Narration"
+                          InputId="@($"RiNarration{context.LineNum}")"
+                          OnKeyDown="@((e)=>OnEnterLastColumn(e, context.LineNum))"
+                          @onfocusin="@(() => SelectAllText($"RiNarration{context.LineNum}"))"
+                          Underline="false"
+                          Disabled="ReadState  || (int)SelectedRfq.PurCycleState >= (int)PurchaseCycleState.PO"
+                          Margin="Margin.Dense"></MudTextField>
+        </MudTd>
+
+            <MudTd DataLabel="Actions" Class="sticky-right-column bordered">
+                <MudIconButton OnClick="()=>DeleteItemAsync(context)"
+                               Disabled="ReadState  || (int)SelectedRfq.PurCycleState >= (int)PurchaseCycleState.PO"
+                               Size="@Size.Small"
+                               Color="@Color.Error"
+                               Variant="@Variant.Text"
+                               Icon="@Icons.Material.Filled.Delete"></MudIconButton>
+            </MudTd>
+    </RowTemplate>
+
+    <LoadingContent>
+        <MudProgressLinear Color="Color.Secondary" Indeterminate="true" Class="my-7" />
+    </LoadingContent>
+
+    <FooterContent>
+        @if (!ReadState)
+        {
+            <MudTFootRow Class="bold-text bordered">
+                <MudTd DataLabel="Item Code" Class="bordered MudThWidth130">
+                    <MudAutocomplete T="Product" @ref="FtItemRef" InputId="FtItemId" Value="FtItem"
+                                     ValueChanged="FtItemChange"
+                                     SearchFunc="@ItemSearch"
+                                     ToStringFunc="@(e=> e == null ? null : $"{e.Code}")"
+                                     Placeholder="@Tr("Code")"
+                                     PopoverClass="ItemListClass"
+                                     Dense="true"
+                                     Strict="false"
+                                     Immediate="true"
+                                     Underline="false"
+                                     CoerceText="false"
+                                     Disabled="ReadState  || (int)SelectedRfq.PurCycleState >= (int)PurchaseCycleState.PO"
+                                     SelectValueOnTab="true"
+                                     ResetValueOnEmptyText="true"
+                                     ShowProgressIndicator="true"
+                                     Margin="Margin.Dense"
+                                     Adornment="@(ReadState?Adornment.None:Adornment.End)"
+                                     AdornmentColor="Color.Tertiary"
+                                     AnchorOrigin="Origin.BottomCenter"
+                                     ProgressIndicatorColor="Color.Success">
+
+                        <NoItemsTemplate>
+                            <MudText Align="Align.Center" Class="px-4 py-1">
+                                @Tr("NoItemsFound")
+                            </MudText>
+                        </NoItemsTemplate>
+
+                        <BeforeItemsTemplate>
+                            <MudGrid Class="d-flex padding-top">
+                                <MudItem Class="padding-inside" lg="1" md="1">
+                                    <b>@Tr("Code")</b>
+                                </MudItem>
+                                <MudItem Class="padding-inside" lg="4" md="4">
+                                    <b>@Tr("EnglishDesc")</b>
+                                </MudItem>
+                                <MudItem Class="padding-inside" lg="4" md="4">
+                                    <b>@Tr("ArabicDesc")</b>
+                                </MudItem>
+                            </MudGrid>
+                        </BeforeItemsTemplate>
+
+                        <ItemTemplate Context="e">
+                            <MudGrid Class="d-flex padding-items">
+                                <MudItem lg="1" md="1" Style="overflow:hidden;">
+                                    <MudHighlighter Text="@e.Code" HighlightedText="@ItemHighlighterText" Style="background-color:gold;font-weight:bold;padding:0px;"></MudHighlighter>
+                                </MudItem>
+                                <MudItem lg="4" md="4" Style="overflow:hidden;">
+                                    <MudHighlighter Text="@e.EnglishDesc" HighlightedText="@ItemHighlighterText" Style="background-color:gold;font-weight:bold;padding:0px"></MudHighlighter>
+                                </MudItem>
+                                <MudItem lg="4" md="4" Style="overflow:hidden;">
+                                    <MudHighlighter Text="@e.ArabicDesc" HighlightedText="@ItemHighlighterText" Style="background-color:gold;font-weight:bold;padding:0px"></MudHighlighter>
+                                </MudItem>
+                            </MudGrid>
+                        </ItemTemplate>
+                    </MudAutocomplete>
+                </MudTd>
+
+                <MudTd DataLabel="Item Desc" Class="bordered MudThWidth200">
+                    <MudTextField @ref="FtItemNameRef" @bind-Value="FtItemName"
+                                  OnKeyDown="@((e) =>{if(e.Key=="Enter") FtUnitRef.FocusAsync();})"
+                                  @onfocusin="async ()=> await FtItemNameRef.SelectAsync()"
+                                  Underline="false"
+                                  Disabled="ReadState  || (int)SelectedRfq.PurCycleState >= (int)PurchaseCycleState.PO"
+                                  Placeholder="@Tr("Name")"
+                                  Margin="Margin.Dense"></MudTextField>
+                </MudTd>
+
+                <MudTd DataLabel="Unit" Class="bordered MudThWidth130">
+                    <MudSelect T="Unit" @ref="FtUnitRef" Value="FtUnit"
+                               ValueChanged="FtUnitChanged"
+                               Dense="true"
+                               Strict="false"
+                               Underline="false"
+                               Disabled="ReadState  || (int)SelectedRfq.PurCycleState >= (int)PurchaseCycleState.PO"
+                               Placeholder="@Tr("Unit")"
+                               Margin="Margin.Dense"
+                               Adornment="Adornment.End"
+                               AdornmentColor="Color.Tertiary"
+                               AnchorOrigin="Origin.BottomCenter"
+                               ToStringFunc="@(e=> e==null?null : EnglishCulture?e.EnglishDesc:e.ArabicDesc)">
+                        @if (FtUnitList.IsNotNullOrEmptyList())
+                        {
+                            @foreach (var item in FtUnitList)
+                            {
+                                <MudSelectItem OnClick="FtUnitOnClick" Value="@item">@(EnglishCulture ? item.EnglishDesc : item.ArabicDesc)</MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                </MudTd>
+
+                <MudTd DataLabel="Qty" Class="bordered">
+                    <MudNumericField T="decimal" @ref="FtQtyRef" @bind-Value="FtQty"
+                                     InputId="@($"FtQtyRef")"
+                                     OnKeyDown="@((e) => FocusNextInput(e, $"FtFreeQtyRef"))"
+                                     @onfocusin="async ()=> await FtQtyRef.SelectAsync()"
+                                     TextChanged="FtQtyTextChange"
+                                     Min="0"
+                                     Format="N0"
+                                     Underline="false"
+                                     Disabled="ReadState  || (int)SelectedRfq.PurCycleState >= (int)PurchaseCycleState.PO"
+                                     Class="NoRight"
+                                     Margin="Margin.Dense"
+                                     HideSpinButtons="true"></MudNumericField>
+                </MudTd>
+
+                <MudTd DataLabel="FreeQty" Class="bordered MudThWidth180">
+                    <MudNumericField T="decimal" @ref="FtFreeQtyRef" @bind-Value="FtFreeQty"
+                                     InputId="@($"FtFreeQtyRef")"
+                                     OnKeyDown="@((e) => FocusNextInput(e, $"FtPurPriceRef"))"
+                                     @onfocusin="async ()=> await FtFreeQtyRef.SelectAsync()"
+                                     Min="0"
+                                     Format="N0"
+                                     Underline="false"
+                                     Disabled="ReadState  || (int)SelectedRfq.PurCycleState >= (int)PurchaseCycleState.PO"
+                                     HideSpinButtons="true"
+                                     Class="NoRight"
+                                     Placeholder="0.000"
+                                     Margin="Margin.Dense"
+                                     Validation="@(new Func<decimal?, IEnumerable<string>>(ValidDecimalNumber))"></MudNumericField>
+                </MudTd>
+
+
+                <MudTd DataLabel="Actions" Class="bordered sticky-right-column">
+                    <MudTooltip Text="@Tr("Clear")"
+                                Arrow="true"
+                                Duration="600"
+                                Color="Color.Warning"
+                                Placement="Placement.Top">
+
+                        <MudIconButton OnClick="()=>ResetFt()"
+                                       Disabled="ReadState  || (int)SelectedRfq.PurCycleState >= (int)PurchaseCycleState.PO"
+                                       Size="Size.Small"
+                                       Color="Color.Warning"
+                                       Icon="@Icons.Material.Filled.Clear" />
+                    </MudTooltip>
+                </MudTd>
+            </MudTFootRow>
+        }
+        <MudTFootRow Class="custom-footer-row">
+            <MudTd></MudTd>
+            <MudTd></MudTd>
+            <MudTd></MudTd>
+            <MudTd></MudTd>
+            <MudTd></MudTd>
+            <MudTd></MudTd>
+        </MudTFootRow>
+    </FooterContent>
+</MudTable> *@
+
+@code {
+    #region (ɔ◔‿◔)ɔ ♡  Variables Declaration  ツ
+
+    // Params
+
+    [CascadingParameter(Name = "Papa")]
+    public ChildData Papa { get; set; } = new();
+
+    [CascadingParameter(Name = "TabID")]
+    public Guid TabID { get; set; }
+
+    [Parameter] public EventCallback<(Guid, CallZaCenter)> CallCenter { get; set; }
+
+    // Variables
+
+    bool UpdateState { get; set; } = false;
+    bool OverlayLoad { get; set; } = false;
+    List<BreadcrumbItem> _items = [];
+
+    // refs
+    // MudTable<FacultySelectOutput> ItemsTableRef { get; set; } = new();
+
+    //Form
+
+    public MudForm FormRef = new();
+    bool FormSuccess;
+    string[] FormErrors = { };
+
+    //Dynamic Dialog
+
+    IDictionary<string, object> CurrentComponentParameters { get; set; } = new Dictionary<string, object>();
+
+    Type DialogComponentType { get; set; } = null!;
+
+    DialogOptions OptionDialog = new DialogOptions() { CloseButton = true, BackdropClick = false };
+
+    #endregion (ɔ◔‿◔)ɔ ♡  Variables Declaration  ツ
+
+    // 🔭
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await Task.Yield();
+            OverlayLoad = true;
+            StateHasChanged();
+
+            // await Papa.CallPapa(ChildRequest.RequestLists, LoadList.Faculties);
+
+            // _items = [ new(Tr("MainTab"), href: null), new(Tr("Stampah"), href: null), ];
+        }
+        catch (Exception ex)
+        {
+            await _msg.ExceptionHandle("UnExpectedError", ex);
+        }
+        finally
+        {
+            OverlayLoad = false; StateHasChanged();
+        }
+
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Task.CompletedTask;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await Task.CompletedTask;
+    }
+
+    // 🎨
+
+    async Task CallLoad()
+    {
+        try
+        {
+            //----
+            await Task.Yield();
+            OverlayLoad = true;
+            StateHasChanged();
+            //----
+
+            await Task.Delay(3000);
+
+        }
+        // catch (Exception ex)
+        // {
+        //     // await _msg.PublishErrors(ex.Message);
+        // }
+        finally
+        {
+            OverlayLoad = false; StateHasChanged();
+        }
+    }
+
+    #region ʕ•́ᴥ•̀ʔっ  CRUDz  💀
+
+    async Task OneButtonsBarHandle(OneBtnClick btn)
+    {
+        await Task.Yield();
+        OverlayLoad = true;
+
+        switch (btn)
+        {
+            case OneBtnClick.Save:
+                break;
+
+            case OneBtnClick.Update:
+                UpdateState = true;
+                break;
+
+            case OneBtnClick.Clear:
+                break;
+
+            case OneBtnClick.Delete:
+                break;
+        }
+        OverlayLoad = false; StateHasChanged();
+    }
+
+    #endregion
+
+    //﹏
+
+    #region ʕ•́ᴥ•̀ʔっ  Assistants  ✍
+
+    // string Tr(string value) => _localizer.Keys[value];
+
+    #endregion ʕ•́ᴥ•̀ʔっ  Assistants  ✍
+
+    //﹏
+
+    #region ʕ•́ᴥ•̀ʔっ  Events  ♀
+
+    #endregion ʕ•́ᴥ•̀ʔっ  Events  ♀
+
+    //﹏
+
+    #region ʕ•́ᴥ•̀ʔっ  Autocompelete Searchers  🔬
+
+    #endregion ʕ•́ᴥ•̀ʔっ  Autocompelete Searchers  🔬
+
+    //﹏
+
+    #region ʕ•́ᴥ•̀ʔっ  Validators  🔍
+
+    async Task<bool> CheckPageIsValid()
+    {
+
+        await FormRef.Validate();
+        if (!FormRef.IsValid)
+            return false;
+
+        return true;
+    }
+
+    #endregion ʕ•́ᴥ•̀ʔっ  Validators  🔍
+
+}

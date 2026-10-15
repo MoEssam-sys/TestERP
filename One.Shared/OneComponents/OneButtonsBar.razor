@@ -1,0 +1,47 @@
+﻿
+
+<MudItem Class="align-content-center gap-2 justify-content-center mt-2" Style="overflow-x: hidden; display:flex; flex-wrap:nowrap">
+    @if (!UpdateState)
+    {
+        <MudButton OnClick="async () => await OnBtnClick.InvokeAsync(OneBtnClick.Save)"
+                   Size="Size.Small"
+                   Variant="Variant.Outlined"
+                   Style="text-transform:none"
+                   Color="@(Color.Primary)"
+                   Disabled="AllBtnsDisabled || IsSaveBtnDisabled"
+                   StartIcon="@(Icons.Material.Filled.Save)">@(SaveBtnTxt)</MudButton>
+    }
+
+    @if (ShowUpdateBtn)
+    {
+        <MudButton OnClick="async () => await OnBtnClick.InvokeAsync(OneBtnClick.Update)"
+                   Size="Size.Small"
+                   Variant="Variant.Outlined"
+                   Style="text-transform:none"
+                   Color="@(Color.Warning)"
+                   Disabled="AllBtnsDisabled || IsUpdateBtnDisabled"
+                   StartIcon="@(Icons.Material.Filled.Edit)">@(loc["Update"])</MudButton>
+    }
+
+    @if (ShowDeleteBtn && !UpdateState)
+    {
+        <MudButton OnClick="async () => await OnBtnClick.InvokeAsync(OneBtnClick.Delete)"
+                   Size="Size.Small"
+                   Variant="Variant.Text"
+                   Style="text-transform:none"
+                   Color="@(Color.Error)"
+                   Disabled="AllBtnsDisabled || IsDeleteBtnDisabled"
+                   StartIcon="@(Icons.Material.Filled.Delete)">@(loc["Delete"])</MudButton>
+    }
+
+    @if (ShowClearBtn)
+    {
+        <MudButton OnClick="async () => await OnBtnClick.InvokeAsync(OneBtnClick.Clear)"
+                   Size="Size.Small"
+                   Variant="Variant.Text"
+                   Style="text-transform:none"
+                   Disabled="AllBtnsDisabled || IsClearBtnDisabled"
+                   StartIcon="@Icons.Material.Filled.Undo" Color="Color.Tertiary">@(loc["Clear"])</MudButton>
+    }
+</MudItem>
+

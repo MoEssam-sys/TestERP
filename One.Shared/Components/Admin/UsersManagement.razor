@@ -1,0 +1,411 @@
+@page "/users-management"
+@page "/users-management/{CompanyId:int}"
+@using One.Domain.DTOs
+@using One.Domain.DTOs.Identity
+@using One.Domain.Base
+@using System.Net.Http.Json
+@attribute [One.Shared.Security.PagePermission(One.Domain.Constants.PermissionCatalogKeys.Pages.Users)]
+@using One.Shared.Services
+@using One.Shared.Services.Extenstions
+@using One.Shared.Constants
+@using One.Shared.Components.SysAdmin
+@inject NavigationManager _nav
+@inject MessagesCenter _msg
+@inject One.Shared.Services.Session.IClientSession Session
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "SuperAdmin,CompanyAdmin")]
+
+@inject IKeysAccessor trgma
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
+    <MudText Typo="Typo.h4" GutterBottom="true" Color="Color.Primary">@trgma.UsersManagement</MudText>
+    <MudText Typo="Typo.subtitle1" Class="mb-4">@trgma.ManageUsersDescription</MudText>
+
+    @if (_loading)
+    {
+        <MudStack AlignItems="AlignItems.Center" Class="my-8">
+            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+            <MudText Typo="Typo.body1" Class="mt-2">@trgma.LoadingUsers</MudText>
+        </MudStack>
+    }
+    else if (_hasError)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-4" Variant="Variant.Filled">
+            <MudText Typo="Typo.body1"><strong>@trgma.FailedToLoadUsers</strong></MudText>
+            <MudText Typo="Typo.body2">@_errorMessage</MudText>
+        </MudAlert>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(async () => await LoadData())" StartIcon="@Icons.Material.Filled.Refresh">
+            @trgma.Retry
+        </MudButton>
+    }
+    else
+    {
+        <!-- Filters & Actions -->
+        <MudGrid Class="align-center mb-4">
+            <MudItem xs="12" sm="6" md="4">
+                <MudTextField T="string" Value="_searchString"
+                              ValueChanged="OnSearchChanged"
+                              Placeholder="@trgma.SearchUsersPlaceholder"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Immediate="true"
+                              DebounceInterval="300" />
+            </MudItem>
+            @if (_isSuperAdmin)
+            {
+                <MudItem xs="12" sm="6" md="3">
+                    <MudAutocomplete T="CompanyLookupDto" Value="_selectedCompany" ValueChanged="OnCompanyChanged"
+                                     SearchFunc="SearchCompaniesAsync"
+                                     ToStringFunc="@(item => item is null ? string.Empty : $"{item.Name} ({item.Code})")"
+                                     Placeholder="@trgma.FilterByCompany" Adornment="Adornment.Start"
+                                     AdornmentIcon="@Icons.Material.Filled.Business" Clearable="true"
+                                     ResetValueOnEmptyText="true" CoerceValue="false" ShowProgressIndicator="true" />
+                </MudItem>
+            }
+            <PermissionView PageKey="@One.Domain.Constants.PermissionCatalogKeys.Pages.RegisterUser"
+                            ActionKey="@One.Domain.Constants.PermissionCatalogKeys.Actions.Create">
+                <MudItem xs="12" sm="6" md="3">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="@NavigateToCreateUser">@trgma.AddUser</MudButton>
+                </MudItem>
+            </PermissionView>
+        </MudGrid>
+
+        <!-- Users Table -->
+        <MudTable T="UserManagementDto"
+                  @ref="_table"
+                  ServerData="LoadUsersPage"
+                  Dense="true"
+                  Hover="true"
+                  Striped="true"
+                  Elevation="2">
+            <HeaderContent>
+                <MudTh>@trgma.Username</MudTh>
+                <MudTh>@trgma.FullName</MudTh>
+                <MudTh>@trgma.Email</MudTh>
+                <MudTh>@trgma.Roles</MudTh>
+                @if (_isSuperAdmin)
+                {
+                    <MudTh>@trgma.Company</MudTh>
+                }
+                <MudTh>@trgma.Status</MudTh>
+                <MudTh>@trgma.Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@trgma.Username">@context.UserName</MudTd>
+                <MudTd DataLabel="@trgma.FullName">@context.FirstName @context.LastName</MudTd>
+                <MudTd DataLabel="@trgma.Email">@context.Email</MudTd>
+                <MudTd DataLabel="@trgma.Roles">
+                    @foreach (var role in context.Roles)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="@GetRoleColor(role)" Class="mr-1">@role</MudChip>
+                    }
+                </MudTd>
+                @if (_isSuperAdmin)
+                {
+                    <MudTd DataLabel="@trgma.Company">@context.CompanyName</MudTd>
+                }
+                <MudTd DataLabel="@trgma.Status">
+                    <MudSwitch T="bool" Value="@context.IsActive" Color="Color.Success" ThumbIcon="@(context.IsActive ? Icons.Material.Filled.Check : Icons.Material.Filled.Close)" ThumbIconColor="@(context.IsActive ? Color.Success : Color.Error)" Disabled="true" />
+                </MudTd>
+                <MudTd DataLabel="@trgma.Actions">
+                    @if (!context.Roles.Contains("SuperAdmin") && !context.Roles.Contains("CompanyAdmin"))
+                    {
+                        <PermissionView PageKey="@One.Domain.Constants.PermissionCatalogKeys.Pages.Users"
+                                        ActionKey="@One.Domain.Constants.PermissionCatalogKeys.Actions.Update">
+                            <MudTooltip Text="@loc["ManagePermissions"]">
+                                <MudIconButton Icon="@Icons.Material.Filled.Shield" Size="Size.Small" Color="Color.Primary" OnClick="@(() => OpenPermissionsAsync(context))" />
+                            </MudTooltip>
+                        </PermissionView>
+                    }
+                    <PermissionView PageKey="@One.Domain.Constants.PermissionCatalogKeys.Pages.Users"
+                                    ActionKey="@One.Domain.Constants.PermissionCatalogKeys.Actions.Activate">
+                        @if (context.IsActive)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Block" Size="Size.Small" Color="Color.Error" OnClick="@(() => ToggleUserStatus(context, false))" />
+                        }
+                        else
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success" OnClick="@(() => ToggleUserStatus(context, true))" />
+                        }
+                    </PermissionView>
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+            <NoRecordsContent>
+                <MudText Typo="Typo.body1" Class="pa-4" Color="Color.Secondary">@trgma.NoUsersFound</MudText>
+            </NoRecordsContent>
+        </MudTable>
+
+        @if (_permissionEditor is not null)
+        {
+            <MudPaper Outlined="true" Class="pa-4 mt-5">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
+                    <div>
+                        <MudText Typo="Typo.h6">@loc["UserPermissions"]: @_permissionEditor.UserName</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">@loc["UserPermissionsDescription"]</MudText>
+                    </div>
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="ClosePermissions" />
+                </MudStack>
+
+                @if (_permissionsLoading)
+                {
+                    <MudProgressLinear Indeterminate="true" />
+                }
+                else
+                {
+                    <PermissionSelector Modules="@_permissionEditor.AvailablePermissions"
+                                        Selected="@_selectedPermissions"
+                                        SelectedChanged="OnPermissionsChanged" />
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Save"
+                               Disabled="@_permissionsSaving"
+                               OnClick="SavePermissionsAsync">
+                        @loc["SavePermissions"]
+                    </MudButton>
+                }
+            </MudPaper>
+        }
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int? CompanyId { get; set; }
+
+    private bool _loading = true;
+    private bool _hasError = false;
+    private string _errorMessage = "";
+    private string _searchString = "";
+    private int? _selectedCompanyId;
+    private bool _isSuperAdmin = false;
+    private bool _permissionsLoading;
+    private bool _permissionsSaving;
+    private UserPermissionEditorDto? _permissionEditor;
+    private IReadOnlyList<PermissionSelectionDto> _selectedPermissions = [];
+
+    private MudTable<UserManagementDto>? _table;
+    private CompanyLookupDto? _selectedCompany;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isSuperAdmin = CheckHasRole("SuperAdmin");
+        _selectedCompanyId = CompanyId;
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        _hasError = false;
+        _errorMessage = "";
+        StateHasChanged();
+
+        try
+        {
+            if (_isSuperAdmin && CompanyId.HasValue)
+            {
+                var companyResult = await _api.GetAsync<CompanyLookupDto>(
+                    $"api/Companies/lookup/{CompanyId.Value}",
+                    trgma.FailedToLoadData);
+                if (companyResult.Success && companyResult.Data is not null)
+                    _selectedCompany = companyResult.Data;
+            }
+
+            if (_table is not null)
+                await _table.ReloadServerData();
+        }
+        catch (Exception ex)
+        {
+            _hasError = true;
+            _errorMessage = $"Error: {ex.Message}";
+            await _msg.ExceptionHandle(trgma.FailedToLoadUsers, ex);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task<TableData<UserManagementDto>> LoadUsersPage(
+        TableState state,
+        CancellationToken cancellationToken)
+    {
+        var route = _isSuperAdmin ? "api/Users/paged" : "api/Users/my-company/paged";
+        var separator = "?";
+        route += $"{separator}pageNumber={state.Page + 1}&pageSize={state.PageSize}";
+        if (_isSuperAdmin && _selectedCompanyId.HasValue)
+            route += $"&companyId={_selectedCompanyId.Value}";
+        if (!string.IsNullOrWhiteSpace(_searchString))
+            route += $"&search={Uri.EscapeDataString(_searchString.Trim())}";
+
+        var result = await _api.GetAsync<PagedResult<UserManagementDto>>(
+            route,
+            trgma.FailedToLoadUsers,
+            cancellationToken);
+        if (!result.Success || result.Data is null)
+        {
+            _hasError = true;
+            _errorMessage = result.Messages?.FirstOrDefault() ?? trgma.FailedToLoadUsers;
+            return new TableData<UserManagementDto> { Items = [], TotalItems = 0 };
+        }
+
+        _hasError = false;
+        _errorMessage = string.Empty;
+        return new TableData<UserManagementDto>
+        {
+            Items = result.Data.Items,
+            TotalItems = result.Data.TotalCount
+        };
+    }
+
+    private async Task OnSearchChanged(string value)
+    {
+        _searchString = value;
+        if (_table is not null)
+            await _table.ReloadServerData();
+    }
+
+    private async Task<IEnumerable<CompanyLookupDto>> SearchCompaniesAsync(
+        string search,
+        CancellationToken cancellationToken)
+    {
+        var route = "api/Companies/lookup?take=30";
+        if (!string.IsNullOrWhiteSpace(search))
+            route += $"&search={Uri.EscapeDataString(search.Trim())}";
+        var result = await _api.GetAsync<IReadOnlyList<CompanyLookupDto>>(
+            route,
+            trgma.FailedToLoadData,
+            cancellationToken);
+        return result.Success && result.Data is not null ? result.Data : [];
+    }
+
+    private async Task OnCompanyChanged(CompanyLookupDto? value)
+    {
+        _selectedCompany = value;
+        _selectedCompanyId = value?.Id;
+        if (_table is not null)
+            await _table.ReloadServerData();
+    }
+
+    private void NavigateToCreateUser()
+    {
+        if (_selectedCompanyId.HasValue)
+        {
+            _nav.NavigateTo($"/register-user/{_selectedCompanyId.Value}");
+        }
+        else
+        {
+            _nav.NavigateTo("/register-user");
+        }
+    }
+
+    private async Task ToggleUserStatus(UserManagementDto user, bool enable)
+    {
+        try
+        {
+            var result = await _api.PostAsync<bool, object>(
+                $"api/Users/{user.Id}/toggle-status?isActive={enable}",
+                new { },
+                trgma.FailedToUpdateStatus);
+            if (result.Success)
+            {
+                 await _msg.NotifySuccess(trgma.UserStatusUpdatedSuccessfully);
+                 user.IsActive = enable;
+                 StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            await _msg.ExceptionHandle(trgma.FailedToUpdateStatus, ex);
+        }
+    }
+
+    private async Task OpenPermissionsAsync(UserManagementDto user)
+    {
+        _permissionsLoading = true;
+        _permissionEditor = new UserPermissionEditorDto(user.Id, user.UserName, user.CompanyId ?? 0, 0, [], []);
+        try
+        {
+            var response = await _api.GetAsync<UserPermissionEditorDto>(
+                $"api/permissions/users/{user.Id}",
+                loc["FailedToLoadUserPermissions"]);
+            if (!response.Success || response.Data is null)
+            {
+                _permissionEditor = null;
+                await _msg.PublishErrors([loc["FailedToLoadUserPermissions"]]);
+                return;
+            }
+
+            _permissionEditor = response.Data;
+            _selectedPermissions = response.Data.GrantedPermissions;
+        }
+        catch (Exception exception)
+        {
+            _permissionEditor = null;
+            await _msg.ExceptionHandle(loc["FailedToLoadUserPermissions"], exception);
+        }
+        finally
+        {
+            _permissionsLoading = false;
+        }
+    }
+
+    private Task OnPermissionsChanged(IReadOnlyList<PermissionSelectionDto> permissions)
+    {
+        _selectedPermissions = permissions;
+        return Task.CompletedTask;
+    }
+
+    private async Task SavePermissionsAsync()
+    {
+        if (_permissionEditor is null)
+            return;
+
+        _permissionsSaving = true;
+        try
+        {
+            var result = await _api.PutAsync<UserPermissionEditorDto, ReplaceUserPermissionsRequest>(
+                $"api/permissions/users/{_permissionEditor.UserId}",
+                new ReplaceUserPermissionsRequest(_selectedPermissions, _permissionEditor.Version),
+                loc["FailedToSaveUserPermissions"]);
+            if (!result.Success || result.Data is null)
+            {
+                return;
+            }
+
+            _permissionEditor = result.Data;
+            _selectedPermissions = result.Data.GrantedPermissions;
+            await _msg.NotifySuccess(loc["PermissionsUpdatedSuccessfully"]);
+        }
+        catch (Exception exception)
+        {
+            await _msg.ExceptionHandle(loc["FailedToSaveUserPermissions"], exception);
+        }
+        finally
+        {
+            _permissionsSaving = false;
+        }
+    }
+
+    private void ClosePermissions()
+    {
+        _permissionEditor = null;
+        _selectedPermissions = [];
+    }
+
+    private Color GetRoleColor(string role) => role switch
+    {
+        "SuperAdmin" => Color.Error,
+        "CompanyAdmin" => Color.Warning,
+        "User" => Color.Success,
+        "Tester" => Color.Info,
+        _ => Color.Default
+    };
+
+    private bool CheckHasRole(string role)
+    {
+        return Session.IsInRole(role);
+    }
+}

@@ -1,0 +1,17 @@
+﻿@* *** Breadcrumbs *** *@
+<MudItem Class="d-flex align-content-center mt-2 gap-2">
+    <MudSpacer />
+    <MudBreadcrumbs Items="@BreadItems">
+        <ItemTemplate Context="item">
+            <MudLink Color="@BreadColor">@item.Text</MudLink>
+        </ItemTemplate>
+    </MudBreadcrumbs>
+    <MudSpacer />
+</MudItem>
+
+@code {
+    [Parameter]
+    public Color BreadColor { get; set; } = Color.Primary;
+    [Parameter]
+    public List<BreadcrumbItem> BreadItems { get; set; } = [];
+}

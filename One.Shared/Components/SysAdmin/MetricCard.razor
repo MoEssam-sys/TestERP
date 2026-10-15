@@ -1,0 +1,12 @@
+<MudPaper Outlined="true" Class="pa-4 rounded-lg health-metric-card">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+        <MudAvatar Color="Color.Primary" Variant="Variant.Outlined"><MudIcon Icon="@Icon" /></MudAvatar>
+        <div><MudText Typo="Typo.caption" Color="Color.Secondary">@Title</MudText><MudText Typo="Typo.h5">@Value</MudText></div>
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Value { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Icon { get; set; } = string.Empty;
+}

@@ -1,0 +1,3 @@
+.health-metric-card { min-height: 6rem; transition: transform .18s ease, border-color .18s ease; }
+.health-metric-card:hover { transform: translateY(-2px); border-color: var(--mud-palette-primary); }
+@media (prefers-reduced-motion: reduce) { .health-metric-card { transition: none; } .health-metric-card:hover { transform: none; } }

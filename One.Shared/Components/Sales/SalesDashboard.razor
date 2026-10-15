@@ -1,0 +1,109 @@
+﻿@page "/sales"
+
+@attribute [One.Shared.Security.PagePermission(One.Domain.Constants.PermissionCatalogKeys.Pages.SalesDashboard)]
+
+@* تأكد إن عندك في _Imports.razor:
+   @using MudBlazor
+   @inject IKeysAccessor trgma
+*@
+<OnePageHeader Title="@trgma.SalesDashboard" />
+
+<MudGrid Class="mb-4">
+  @foreach (var kpi in KPIs)
+  {
+    <MudItem xs="12" sm="6" md="3">
+      <MudPaper Class="pa-4" Elevation="1">
+        <MudText Typo="Typo.overline">@kpi.Label</MudText>
+        <MudText Typo="Typo.h5">@kpi.Value</MudText>
+      </MudPaper>
+    </MudItem>
+  }
+</MudGrid>
+
+<MudPaper Class="pa-4 mb-4" Elevation="1">
+    <MudText Typo="Typo.subtitle1" Class="mb-2">@trgma.SalesLast12Weeks</MudText>
+    <MudChart ChartType="ChartType.Line" ChartSeries="@Series" XAxisLabels="@XAxisLabels" Width="100%" Height="350" />
+</MudPaper>
+
+<MudPaper Class="pa-4" Elevation="1">
+  <MudText Typo="Typo.subtitle1" Class="mb-2">@trgma.RecentInvoices</MudText>
+  <MudTable Items="@RecentInvoices" Dense="true" Hover="true">
+    <HeaderContent>
+      <MudTh>@trgma.Number</MudTh>
+      <MudTh>@trgma.Customer</MudTh>
+      <MudTh>@trgma.Date</MudTh>
+      <MudTh>@trgma.Total</MudTh>
+      <MudTh>@trgma.Status</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+      <MudTd>@context.Number</MudTd>
+      <MudTd>@context.CustomerName</MudTd>
+      <MudTd>@context.Date.ToShortDateString()</MudTd>
+      <MudTd>@context.Total.ToString("N2")</MudTd>
+      <MudTd>
+        <MudChip T="@string" Color="@(context.Paid ? Color.Success : Color.Warning)" Variant="Variant.Outlined">
+          @(context.Paid ? trgma.Paid : trgma.Unpaid)
+        </MudChip>
+      </MudTd>
+    </RowTemplate>
+  </MudTable>
+</MudPaper>
+
+@code{
+    // Types
+    private record KPI(string Label, string Value);
+    private record Invoice(string Number, string CustomerName, DateTime Date, decimal Total, bool Paid);
+
+    // Fields (لا تستخدم var هنا)
+    private List<KPI> KPIs = new();
+    private string[] Labels = Array.Empty<string>();
+    private ChartSeries[] DataSets = Array.Empty<ChartSeries>();
+    private List<Invoice> RecentInvoices = new();
+
+    public List<ChartSeries> Series { get; set; } = [];
+    public string[] XAxisLabels = [];
+
+    protected override void OnInitialized()
+    {
+        // أي حاجة محتاجة trgma أو منطق لازم هنا (مش في المهيئات)
+        KPIs = new List<KPI>
+        {
+            new(trgma.TotalSalesMonth, "235,000"),
+            new(trgma.UnpaidInvoices, "7"),
+            new(trgma.OpenOrders, "12"),
+            new(trgma.LowStockAlerts, "4")
+        };
+
+        Labels = Enumerable.Range(1, 12)
+                           .Select(i => $"{trgma.Week} {i}")
+                           .ToArray();
+
+        DataSets = new[]
+        {
+            new ChartSeries
+            {
+                Name = trgma.Sales,
+                Data = new double[] { 10,12,9,14,18,22,19,25,30,28,31,33 }
+            }
+        };
+
+        RecentInvoices = new List<Invoice>
+        {
+            new("INV-1001","عميل أ", DateTime.Today.AddDays(-1), 12300, false),
+            new("INV-1002","عميل ب", DateTime.Today.AddDays(-1), 7800,  true)
+        };
+
+        Series = new()
+        {
+            new ChartSeries()
+            {
+                Name = trgma.Sales,
+                Data = new double[] { 10, 12, 9, 14, 18, 22, 19, 25, 30, 28, 31, 33 }
+            }
+        };
+
+        XAxisLabels = Enumerable.Range(1, 12)
+            .Select(i => $"{trgma.Week} {i}")
+            .ToArray();
+    }
+}

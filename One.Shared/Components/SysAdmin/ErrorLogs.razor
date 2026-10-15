@@ -1,0 +1,165 @@
+@page "/sysadmin/error-logs"
+@using One.Domain.Base
+@using One.Domain.DTOs
+@using One.Domain.DTOs.Logging
+@attribute [One.Shared.Security.PagePermission(One.Domain.Constants.PermissionCatalogKeys.Pages.ErrorLogs)]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "SuperAdmin")]
+
+<MudContainer MaxWidth="MaxWidth.False" Class="error-logs-page py-4">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4 error-heading">
+        <div>
+            <MudText Typo="Typo.h4">@trgma.ErrorLogs</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@trgma.ErrorLogsDescription</MudText>
+        </div>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="ReloadAsync">
+            @trgma.Refresh
+        </MudButton>
+    </MudStack>
+
+    <MudPaper Outlined="true" Class="pa-3 mb-4 filter-panel">
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string" Value="_search" ValueChanged="OnSearchChanged"
+                              Placeholder="@trgma.SearchErrorsPlaceholder" Immediate="true" DebounceInterval="400"
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                              Variant="Variant.Outlined" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudAutocomplete T="CompanyLookupDto" Value="_selectedRestaurant" ValueChanged="OnCompanyChanged"
+                                 SearchFunc="SearchRestaurantsAsync"
+                                 ToStringFunc="@(item => item is null ? string.Empty : $"{item.Name} ({item.Code})")"
+                                 Label="@trgma.RestaurantsManagement" Placeholder="@trgma.AllRestaurants"
+                                 Clearable="true" ResetValueOnEmptyText="true" CoerceValue="false"
+                                 ShowProgressIndicator="true" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="LogSeverity?" Value="_severity" ValueChanged="OnSeverityChanged"
+                           Label="@trgma.ErrorSeverity" Clearable="true" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    <MudSelectItem T="LogSeverity?" Value="@((LogSeverity?)null)">@trgma.AllSeverities</MudSelectItem>
+                    @foreach (var severity in Enum.GetValues<LogSeverity>())
+                    {
+                        <MudSelectItem T="LogSeverity?" Value="@((LogSeverity?)severity)">@severity</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @if (_loadFailed)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-3">@trgma.FailedToLoadErrorLogs</MudAlert>
+    }
+
+    <MudTable T="AppLogDto" @ref="_table" ServerData="LoadLogsPage" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.Sm">
+        <HeaderContent>
+            <MudTh>@trgma.ErrorReference</MudTh>
+            <MudTh>@trgma.RestaurantInformation</MudTh>
+            <MudTh>@trgma.ErrorSeverity</MudTh>
+            <MudTh>@trgma.ErrorMessage</MudTh>
+            <MudTh>@trgma.ErrorRoute</MudTh>
+            <MudTh>@trgma.OccurredAt</MudTh>
+            <MudTh>@trgma.Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@trgma.ErrorReference"><code>@DisplayReference(context)</code></MudTd>
+            <MudTd DataLabel="@trgma.RestaurantInformation">@(context.CompanyName ?? "—")</MudTd>
+            <MudTd DataLabel="@trgma.ErrorSeverity">
+                <MudChip T="string" Size="Size.Small" Color="@SeverityColor(context.Severity)">@context.Severity</MudChip>
+            </MudTd>
+            <MudTd DataLabel="@trgma.ErrorMessage"><span class="message-cell">@context.Message</span></MudTd>
+            <MudTd DataLabel="@trgma.ErrorRoute"><code>@(context.Route ?? "—")</code></MudTd>
+            <MudTd DataLabel="@trgma.OccurredAt">@context.OccurredAtLocal.ToString("g")</MudTd>
+            <MudTd DataLabel="@trgma.Actions">
+                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary" Size="Size.Small"
+                               OnClick="@(() => _selected = context)" />
+            </MudTd>
+        </RowTemplate>
+        <PagerContent><MudTablePager /></PagerContent>
+        <NoRecordsContent><MudText Class="pa-4">@trgma.NoErrorLogsFound</MudText></NoRecordsContent>
+    </MudTable>
+
+    @if (_selected is not null)
+    {
+        <MudPaper Outlined="true" Class="pa-4 mt-4 error-details">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3 detail-heading">
+                <div>
+                    <MudText Typo="Typo.h6">@trgma.ErrorDetails</MudText>
+                    <MudText Typo="Typo.caption"><code>@DisplayReference(_selected)</code></MudText>
+                </div>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="@(() => _selected = null)" />
+            </MudStack>
+            <MudGrid>
+                <MudItem xs="12" md="6"><Detail Label="@trgma.RestaurantInformation" Value="@(_selected.CompanyName ?? "—")" /></MudItem>
+                <MudItem xs="12" md="6"><Detail Label="@trgma.Username" Value="@(_selected.UserName ?? "—")" /></MudItem>
+                <MudItem xs="12" md="6"><Detail Label="@trgma.ErrorRoute" Value="@(_selected.Route ?? "—")" Code="true" /></MudItem>
+                <MudItem xs="12" md="6"><Detail Label="@trgma.ErrorFunction" Value="@(_selected.FunctionName ?? "—")" Code="true" /></MudItem>
+                <MudItem xs="12" md="6"><Detail Label="@trgma.ErrorSource" Value="@(_selected.SourceFile ?? "—")" Code="true" /></MudItem>
+                <MudItem xs="12" md="6"><Detail Label="@trgma.ErrorLine" Value="@(_selected.LineNumber?.ToString() ?? "—")" Code="true" /></MudItem>
+                <MudItem xs="12" md="6"><Detail Label="@trgma.LocalTime" Value="@_selected.OccurredAtLocal.ToString("O")" Code="true" /></MudItem>
+                <MudItem xs="12" md="6"><Detail Label="@trgma.UniversalTime" Value="@_selected.OccurredAtUtc.ToString("O")" Code="true" /></MudItem>
+                <MudItem xs="12" md="6"><Detail Label="@trgma.CorrelationId" Value="@(_selected.CorrelationId ?? "—")" Code="true" /></MudItem>
+                <MudItem xs="12" md="6"><Detail Label="@trgma.Platform" Value="@(_selected.Platform ?? "—")" /></MudItem>
+            </MudGrid>
+            <MudText Typo="Typo.subtitle2" Class="mt-4 mb-1">@trgma.ErrorMessage</MudText>
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@_selected.Message</MudAlert>
+            @if (!string.IsNullOrWhiteSpace(_selected.StackTrace))
+            {
+                <MudText Typo="Typo.subtitle2" Class="mt-4 mb-1">@trgma.StackTrace</MudText>
+                <pre class="stack-trace" dir="ltr">@_selected.StackTrace</pre>
+            }
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    private MudTable<AppLogDto>? _table;
+    private CompanyLookupDto? _selectedRestaurant;
+    private AppLogDto? _selected;
+    private string _search = string.Empty;
+    private int? _companyId;
+    private LogSeverity? _severity;
+    private bool _loadFailed;
+
+    private async Task<IEnumerable<CompanyLookupDto>> SearchRestaurantsAsync(
+        string search,
+        CancellationToken cancellationToken)
+    {
+        var route = "api/Companies/lookup?take=30";
+        if (!string.IsNullOrWhiteSpace(search))
+            route += $"&search={Uri.EscapeDataString(search.Trim())}";
+        var result = await _api.GetAsync<IReadOnlyList<CompanyLookupDto>>(
+            route,
+            trgma.FailedToLoadData,
+            cancellationToken);
+        return result.Success && result.Data is not null ? result.Data : [];
+    }
+
+    private async Task<TableData<AppLogDto>> LoadLogsPage(TableState state, CancellationToken cancellationToken)
+    {
+        var route = $"api/Logs/admin?pageNumber={state.Page + 1}&pageSize={state.PageSize}";
+        if (_companyId.HasValue)
+            route += $"&companyId={_companyId.Value}";
+        if (_severity.HasValue)
+            route += $"&severity={(int)_severity.Value}";
+        if (!string.IsNullOrWhiteSpace(_search))
+            route += $"&search={Uri.EscapeDataString(_search.Trim())}";
+
+        var result = await _api.GetAsync<PagedResult<AppLogDto>>(route, trgma.FailedToLoadErrorLogs, cancellationToken);
+        _loadFailed = !result.Success || result.Data is null;
+        return result.Data is null
+            ? new TableData<AppLogDto> { Items = [], TotalItems = 0 }
+            : new TableData<AppLogDto> { Items = result.Data.Items, TotalItems = result.Data.TotalCount };
+    }
+
+    private async Task OnSearchChanged(string value) { _search = value; await ReloadAsync(); }
+    private async Task OnCompanyChanged(CompanyLookupDto? value)
+    {
+        _selectedRestaurant = value;
+        _companyId = value?.Id;
+        await ReloadAsync();
+    }
+    private async Task OnSeverityChanged(LogSeverity? value) { _severity = value; await ReloadAsync(); }
+    private async Task ReloadAsync() { _selected = null; if (_table is not null) await _table.ReloadServerData(); }
+    private static string DisplayReference(AppLogDto log) => string.IsNullOrWhiteSpace(log.ReferenceNumber) ? $"LEGACY-{log.Id}" : log.ReferenceNumber;
+    private static Color SeverityColor(LogSeverity severity) => severity switch { LogSeverity.Critical => Color.Error, LogSeverity.Error => Color.Warning, LogSeverity.Warning => Color.Info, _ => Color.Default };
+}

@@ -1,0 +1,107 @@
+@page "/onboarding"
+@layout One.Shared.Components.Layout.AuthLayout
+@using One.Domain.DTOs.Identity
+@using One.Shared.Services.Platform
+@inject IClientStorage ClientStorage
+
+<div class="auth-card-header">
+    <h2>@trgma.SelectWorkspace</h2>
+    <p>@trgma.SelectWorkspaceDescription</p>
+</div>
+
+<EditForm Model="_model" OnValidSubmit="ValidateCompanyAsync">
+    <MudTextField @bind-Value="_model.CompanyCode"
+                  Label="@trgma.CompanyCode"
+                  Placeholder="@trgma.CompanyCodePlaceholder"
+                  HelperText="@trgma.CompanyCodeHelper"
+                  Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Outlined.Apartment"
+                  Variant="Variant.Outlined"
+                  Immediate="true"
+                  MaxLength="50"
+                  Disabled="_loading"
+                  Class="auth-field"
+                  InputType="InputType.Text" />
+
+    <MudButton ButtonType="ButtonType.Submit"
+               Variant="Variant.Filled"
+               Color="Color.Primary"
+               FullWidth="true"
+               Disabled="_loading"
+               StartIcon="@(_loading ? null : Icons.Material.Outlined.ArrowForward)"
+               Class="auth-primary-button mt-3">
+        @if (_loading)
+        {
+            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+            @trgma.Checking
+        }
+        else
+        {
+            @trgma.ContinueToWorkspace
+        }
+    </MudButton>
+</EditForm>
+
+<div class="auth-divider auth-divider-label">@trgma.Administration</div>
+
+<div class="auth-context-card">
+    <MudIcon Icon="@Icons.Material.Outlined.AdminPanelSettings" />
+    <div>
+        <strong>@trgma.SystemAdministrator</strong>
+        <span>@trgma.SystemAdministratorDescription</span>
+    </div>
+</div>
+
+<MudButton Href="/superadmin-login"
+           Variant="Variant.Outlined"
+           Color="Color.Primary"
+           FullWidth="true"
+           StartIcon="@Icons.Material.Outlined.Security"
+           Class="auth-secondary-button">
+    @trgma.LoginAsSuperAdmin
+</MudButton>
+
+@code {
+    private readonly CompanyCodeModel _model = new();
+    private bool _loading;
+
+    protected override void OnInitialized() => _localizer.InitLocalizedComponent(this);
+
+    private async Task ValidateCompanyAsync()
+    {
+        if (_loading)
+            return;
+
+        if (string.IsNullOrWhiteSpace(_model.CompanyCode))
+        {
+            await _msg.PublishErrors(trgma.PleaseEnterCompanyCode);
+            return;
+        }
+
+        _loading = true;
+        try
+        {
+            var companyCode = _model.CompanyCode.Trim();
+            var result = await _api.GetAsync<CompanyValidationDto>(
+                $"api/Authentication/ValidateCompany/{Uri.EscapeDataString(companyCode)}",
+                trgma.FailedTo);
+            if (!result.Success || result.Data is null)
+                return;
+
+            await ClientStorage.SetAsync("company_code", companyCode);
+            await ClientStorage.SetAsync("company_name", result.Data.Name);
+            _nav.NavigateTo(result.Data.RequiresAdminRegistration
+                ? $"/register-admin/{result.Data.CompanyId}"
+                : "/login");
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private sealed class CompanyCodeModel
+    {
+        public string CompanyCode { get; set; } = string.Empty;
+    }
+}

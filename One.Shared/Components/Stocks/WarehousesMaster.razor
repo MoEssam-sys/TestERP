@@ -1,0 +1,434 @@
+﻿@page "/stocks/warehouses"
+@using System.Net.Http.Json
+@attribute [One.Shared.Security.PagePermission(One.Domain.Constants.PermissionCatalogKeys.Pages.InventoryWarehouses)]
+@using One.Domain.Base
+@using One.Domain.DTOs
+@using One.Domain.DTOs.Stocks
+@using Warehouses = One.Contracts.Models.WarehouseModel
+@using One.Domain.DTOs.Sales
+@using Branches = One.Contracts.Models.BranchModel
+@implements IDisposable
+
+<!-- Breadcrumb (لو عندك كومبوننت OneBreadcrumbs) -->
+<OneBreadcrumbs BreadItems="_breadcrumbs" BreadColor="Color.Primary" />
+
+<MudGrid Class="mt-4">
+    <!-- الفورم -->
+    <MudItem xs="12" md="5">
+        <MudCard Class="pa-4">
+            <MudText Typo="Typo.subtitle1" Class="fw-bold mb-2">@trgma.Warehouse</MudText>
+            <MudDivider Class="mb-3" />
+
+            <MudForm @ref="FormRef" @bind-IsValid="FormValid">
+                <MudTextField @bind-Value="FormCode"
+                Label="@trgma.Code"
+                Required="true"
+                Disabled="@_isEditing"
+                Margin="Margin.Dense"
+                Variant="Variant.Outlined" />
+
+                <MudTextField @bind-Value="FormName"
+                Label="@trgma.Name"
+                Required="true"
+                Margin="Margin.Dense"
+                Variant="Variant.Outlined" />
+
+
+                <MudSelect @bind-Value="FormBranchId"
+                Label="@trgma.Warehouse"
+                Margin="Margin.Dense"
+                Variant="Variant.Outlined">
+                    @foreach (var branch in BranchesList)
+                    {
+                        <MudSelectItem Value="branch.Id">@branch.Name</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudSwitch T="bool" @bind-Value="FormIsActive"
+                Disabled="@_isEditing"
+                Color="Color.Success"
+                Class="mt-2"
+                Label="@trgma.Active" />
+
+
+                <MudStack Row Class="mt-3" Spacing="2">
+                    <PermissionView PageKey="@One.Domain.Constants.PermissionCatalogKeys.Pages.InventoryWarehouses"
+                                    ActionKey="@(_isEditing ? One.Domain.Constants.PermissionCatalogKeys.Actions.Update : One.Domain.Constants.PermissionCatalogKeys.Actions.Create)">
+                        <OneLoadingBtn ButtonText="@(_isEditing ? trgma.Update : trgma.Create)"
+                        LoadingText="@trgma.Saving"
+                        Color="Color.Primary"
+                        OnClick="@SaveAsync" />
+                    </PermissionView>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@ResetForm">
+                        @trgma.Cancel
+                    </MudButton>
+                </MudStack>
+            </MudForm>
+        </MudCard>
+    </MudItem>
+
+    <!-- الجدول -->
+    <MudItem xs="12" md="7">
+        <MudCard Class="pa-4">
+            <MudText Typo="Typo.subtitle1" Class="fw-bold mb-2">@trgma.Warehouses</MudText>
+            <MudDivider Class="mb-3" />
+
+            <MudDataGrid @ref="_grid"
+            T="Warehouses"
+            ServerData="ServerReload"
+            Hover="true"
+            Dense="true"
+            Bordered="true"
+            Elevation="0"
+            Filterable="false"
+            RowClick="OnRowClick">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">@trgma.Warehouses</MudText>
+                    <MudSpacer />
+                    <MudTextField T="string"
+                    Value="_search"
+                    ValueChanged="OnSearch"
+                    Placeholder="@trgma.SearchByCodeOrName"
+                    Adornment="Adornment.Start"
+                    AdornmentIcon="@Icons.Material.Filled.Search"
+                    Immediate="true"
+                    DebounceInterval="300"
+                    Class="mt-0" />
+                </ToolBarContent>
+
+                <Columns>
+                    <PropertyColumn T="Warehouses" TProperty="string" Property="x => x.Code" Title="@trgma.Code" />
+                    <PropertyColumn T="Warehouses" TProperty="string" Property="x => x.Name" Title="@trgma.Name" />
+                    <TemplateColumn T="Warehouses" Title="@trgma.Status">
+                        <CellTemplate>
+                            @if (context.Item.IsActive)
+                            {
+                                <MudChip T="@string" Color="Color.Success" Variant="Variant.Outlined">@trgma.Active</MudChip>
+                            }
+                            else
+                            {
+                                <MudChip T="@string" Color="Color.Error" Variant="Variant.Outlined">@trgma.Inactive</MudChip>
+                            }
+                            <PermissionView PageKey="@One.Domain.Constants.PermissionCatalogKeys.Pages.InventoryWarehouses"
+                                            ActionKey="@One.Domain.Constants.PermissionCatalogKeys.Actions.Activate">
+                                <MudIconButton Icon="@(context.Item.IsActive ? Icons.Material.Filled.Block : Icons.Material.Filled.CheckCircle)"
+                                               Color="@(context.Item.IsActive ? Color.Warning : Color.Success)"
+                                               OnClick="@(() => ToggleActiveAsync(context.Item))" />
+                            </PermissionView>
+                            <PermissionView PageKey="@One.Domain.Constants.PermissionCatalogKeys.Pages.InventoryWarehouses"
+                                            ActionKey="@One.Domain.Constants.PermissionCatalogKeys.Actions.Delete">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                Color="Color.Error"
+                                OnClick="@(() => ConfirmAndDeleteAsync(context.Item))" />
+                            </PermissionView>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+
+                <PagerContent>
+                    <MudDataGridPager T="Warehouses" />
+                </PagerContent>
+            </MudDataGrid>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    // ====== Breadcrumb ======
+    private List<BreadcrumbItem> _breadcrumbs = [];
+
+    // ====== Form ======
+    private MudForm FormRef = new();
+    private bool FormValid;
+    private bool _isEditing = false;
+    private Guid? EditingId = null;
+    private byte[] EditingRowVersion = [];
+
+    private string FormCode = string.Empty;
+    private string FormName = string.Empty;
+    private Guid? FormBranchId;
+    private bool FormIsActive { get; set; } = true;
+
+    private List<Branches> BranchesList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _breadcrumbs =
+        [
+            new BreadcrumbItem(trgma.Dashboard, "/"),
+            new BreadcrumbItem(trgma.Warehouses, null, true)
+        ];
+        await LoadBranchesAsync();
+    }
+    // -------- API Calls --------
+    private async Task LoadAsync(int pageNumber = 1, int pageSize = 10, string? query = null)
+    {
+        if (_grid is not null)
+            await _grid.ReloadServerData();
+    }
+    private async Task LoadBranchesAsync(int pageNumber = 1, int pageSize = 10, string? query = null)
+    {
+        try
+        {
+            
+            var payload = await _api.PostAsync<List<Branches>, SearchRequest>(
+                "api/sales/branches/search",
+                new SearchRequest { MaxResults = 100 },
+                trgma.FailedToLoadData);
+
+            if (payload.Success && payload.Data is not null)
+            {
+                BranchesList = payload.Data;
+                StateHasChanged();
+            }
+            else
+            {
+                BranchesList = new();
+            }
+        }
+        catch (Exception ex)
+        {
+            await _msg.ExceptionHandle("UnExpectedError", ex);
+            BranchesList = new();
+        }
+    }
+
+
+    private async Task ResetForm()
+    {
+        EditingId = null;
+        EditingRowVersion = [];
+        FormCode = string.Empty;
+        FormName = string.Empty;
+        FormBranchId = null;
+        FormIsActive = true;
+        _isEditing = false;
+        await FormRef.ResetAsync();
+    }
+
+    // -------- Helpers --------
+
+    // المرجع للـ DataGrid
+    private MudDataGrid<Warehouses>? _grid;
+
+    // نص البحث
+    private string? _search;
+    private readonly CancellationTokenSource _lifetimeCts = new();
+    private CancellationTokenSource? _searchCts;
+
+    // ===== Server Data for MudDataGrid =====
+    private async Task<GridData<Warehouses>> ServerReload(GridState<Warehouses> state)
+    {
+        try
+        {
+            var cancellationToken = _searchCts?.Token ?? _lifetimeCts.Token;
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                var searchResult = await _api.PostAsync<List<Warehouses>, SearchRequest>(
+                    "api/stocks/Warehouses/search",
+                    new SearchRequest { Query = _search, MaxResults = 100 },
+                    trgma.SearchFailed,
+                    cancellationToken);
+                var matches = searchResult.Success ? searchResult.Data ?? [] : [];
+                return new GridData<Warehouses>
+                {
+                    Items = matches.Skip(state.Page * state.PageSize).Take(state.PageSize),
+                    TotalItems = matches.Count
+                };
+            }
+
+            var filter = new FilterWarehouseRequest
+                {
+                    PageNumber = state.Page + 1,
+                    PageSize = state.PageSize,
+                };
+
+            var payload = await _api.PostAsync<PagedResult<Warehouses>, FilterWarehouseRequest>(
+                "api/stocks/Warehouses/filter",
+                filter,
+                trgma.FailedToLoadData,
+                cancellationToken);
+
+            if (payload.Success && payload.Data is not null)
+            {
+                var items = payload.Data.Items ?? new List<Warehouses>();
+
+                return new GridData<Warehouses>
+                    {
+                        Items = items,
+                        TotalItems = payload.Data.TotalCount
+                    };
+            }
+
+            return new GridData<Warehouses> { Items = Array.Empty<Warehouses>(), TotalItems = 0 };
+        }
+        catch (OperationCanceledException) when ((_searchCts?.IsCancellationRequested ?? false) || _lifetimeCts.IsCancellationRequested)
+        {
+            return new GridData<Warehouses> { Items = Array.Empty<Warehouses>(), TotalItems = 0 };
+        }
+        catch (Exception ex)
+        {
+            await _msg.ExceptionHandle("UnExpectedError", ex);
+            return new GridData<Warehouses> { Items = Array.Empty<Warehouses>(), TotalItems = 0 };
+        }
+    }
+
+    private async Task OnSearch(string text)
+    {
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+        var searchCts = CancellationTokenSource.CreateLinkedTokenSource(_lifetimeCts.Token);
+        _searchCts = searchCts;
+        try
+        {
+            _search = text;
+            if (_grid is not null)
+                await _grid.ReloadServerData();
+        }
+        catch (OperationCanceledException) when (searchCts.IsCancellationRequested)
+        {
+        }
+        catch (Exception ex)
+        {
+            await _msg.ExceptionHandle("UnExpectedError", ex);
+        }
+    }
+
+    private void OnRowClick(DataGridRowClickEventArgs<Warehouses> e)
+    {
+        var b = e.Item;
+        EditingId = b.Id;
+        EditingRowVersion = b.RowVersion;
+        FormCode = b.Code ?? string.Empty;
+        FormName = b.Name ?? string.Empty;
+        FormBranchId = b.BranchId;
+        FormIsActive = b.IsActive;
+        _isEditing = true;
+    }
+
+    private async Task SaveAsync()
+    {
+        await FormRef!.Validate();
+        if (!FormValid)
+        {
+            await _msg.CompleteRequiredFields();
+            return;
+        }
+        var test = FormBranchId;
+        try
+        {
+            if (_isEditing && EditingId.HasValue)
+            {
+                var dto = new UpdateWarehouseRequest
+                    {
+                        Id = EditingId.Value,
+                        Name = FormName,
+                        BranchId = FormBranchId ?? new Guid(),
+                        IsActive = FormIsActive,
+                        RowVersion = EditingRowVersion
+                    };
+
+                var res = await _api.PutAsync<bool, UpdateWarehouseRequest>(
+                    "api/stocks/Warehouses/update",
+                    dto,
+                    trgma.UpdateFailed);
+
+                if (res.Success)
+                {
+                    await _msg.UpdatedSuccessfully("Branch");
+                    await LoadAsync();
+                    await ResetForm();
+                }
+            }
+            else
+            {
+                var dto = new CreateWarehouseRequest
+                    {
+                        Code = FormCode,
+                        Name = FormName,
+                        IsActive = FormIsActive,
+                        BranchId = FormBranchId ?? new Guid()
+                    };
+
+                var res = await _api.PostAsync<Warehouses, CreateWarehouseRequest>(
+                    "api/stocks/Warehouses/create",
+                    dto,
+                    trgma.CreationFailed);
+                if (res.Success)
+                {
+                    await _msg.CreatedSuccessfully("Branch");
+                    await LoadAsync();
+                    await ResetForm();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await _msg.ExceptionHandle("UnExpectedError", ex);
+        }
+    }
+
+    private async Task ConfirmAndDeleteAsync(Warehouses row)
+    {
+        var ok = await _msg.ConfirmMsg(trgma.DoYouWantToDeleteThisItem, trgma.Yes, trgma.Cancel, trgma.Warning);
+        if (!ok) return;
+
+        try
+        {
+            var res = await _api.DeleteAsync<bool, DeleteEntityRequest<Guid>>(
+                "api/stocks/Warehouses/delete",
+                new DeleteEntityRequest<Guid>(row.Id, row.RowVersion),
+                trgma.DeleteFailed);
+
+            if (res.Success)
+            {
+                await _msg.DeletedSuccessfully("Branch");
+                await LoadAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            await _msg.ExceptionHandle("UnExpectedError", ex);
+        }
+    }
+
+    private async Task ToggleActiveAsync(Warehouses row)
+    {
+        var dto = new ActiveWarehouseRequest
+        {
+            Id = row.Id,
+            IsActive = !row.IsActive,
+            RowVersion = row.RowVersion
+        };
+        var result = await _api.PutAsync<bool, ActiveWarehouseRequest>(
+            "api/stocks/Warehouses/active",
+            dto,
+            trgma.FailedToUpdateActiveState);
+        if (result.Success)
+            await LoadAsync();
+    }
+
+
+    // ===== Helpers =====
+    private async Task ShowError(List<string?> msgs)
+    {
+        var text = (msgs?.Where(m => !string.IsNullOrWhiteSpace(m)).ToArray() ?? Array.Empty<string>())
+                   .DefaultIfEmpty("حدث خطأ غير متوقع.").ToArray();
+        foreach (var m in text) await _msg.Error(m!);
+    }
+
+    public void Dispose()
+    {
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+        _lifetimeCts.Cancel();
+        _lifetimeCts.Dispose();
+    }
+
+    public sealed class PagedResult<TItem>
+    {
+        public List<TItem> Items { get; set; } = new();
+        public int TotalCount { get; set; }
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+    }
+}

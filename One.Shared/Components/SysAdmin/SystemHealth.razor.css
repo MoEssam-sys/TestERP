@@ -1,0 +1,2 @@
+.health-heading { padding-block-end: 1rem; border-block-end: 1px solid var(--mud-palette-lines-default); }
+@media (max-width: 700px) { .health-heading { align-items: stretch !important; flex-direction: column !important; gap: .75rem; } }

@@ -1,0 +1,24 @@
+.permission-selector {
+    max-height: 32rem;
+    overflow-y: auto;
+    padding-inline-end: .25rem;
+}
+
+.permission-module {
+    border-color: var(--mud-palette-lines-default);
+}
+
+.permission-page {
+    border-top: 1px solid var(--mud-palette-lines-default);
+    padding: .75rem 0;
+}
+
+.permission-page-title {
+    min-height: 2rem;
+}
+
+.permission-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+    gap: .15rem .75rem;
+}

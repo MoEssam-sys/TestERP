@@ -1,0 +1,347 @@
+@page "/superadmin-login"
+@layout One.Shared.Components.Layout.AuthLayout
+@using One.Domain.DTOs
+@using One.Domain.DTOs.Identity
+@using One.Shared.Services.Session
+@inject IClientSession Session
+
+@if (_checkingSession)
+{
+    <div class="auth-status-card" role="status">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        <p>@trgma.CheckingSession</p>
+    </div>
+}
+else
+{
+    <div class="auth-card-header">
+        <h2>@trgma.SuperAdminPortal</h2>
+        <p>@trgma.SuperAdminPortalDescription</p>
+    </div>
+
+    <div class="auth-context-card">
+        <MudIcon Icon="@Icons.Material.Outlined.Security" />
+        <div>
+            <span>@trgma.ProtectedAccess</span>
+            <strong>@trgma.SystemAdministrator</strong>
+        </div>
+    </div>
+
+    <div class="auth-segmented" role="tablist" aria-label="@trgma.SuperAdminLogin">
+        <button type="button"
+                role="tab"
+                aria-selected="@(!_useOtp)"
+                class="auth-segment @(!_useOtp ? "active" : null)"
+                @onclick="UsePasswordMode">
+            @trgma.PasswordLogin
+        </button>
+        <button type="button"
+                role="tab"
+                aria-selected="@_useOtp"
+                class="auth-segment @(_useOtp ? "active" : null)"
+                @onclick="UseOtpMode">
+            @trgma.EmailCodeLogin
+        </button>
+    </div>
+
+    @if (!_useOtp)
+    {
+        <EditForm Model="_passwordModel" OnSubmit="LoginWithPasswordAsync">
+            <MudTextField @bind-Value="_passwordModel.Email"
+                          Label="@trgma.SystemEmail"
+                          Placeholder="name@domain.com"
+                          InputType="InputType.Email"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Outlined.AlternateEmail"
+                          Variant="Variant.Outlined"
+                          Immediate="true"
+                          Disabled="_loading"
+                          Class="auth-field" />
+
+            <MudTextField @bind-Value="_passwordModel.Password"
+                          Label="@trgma.Password"
+                          InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                          Adornment="Adornment.End"
+                          AdornmentIcon="@(_showPassword ? Icons.Material.Outlined.VisibilityOff : Icons.Material.Outlined.Visibility)"
+                          AdornmentAriaLabel="@(_showPassword ? trgma.HidePassword : trgma.ShowPassword)"
+                          OnAdornmentClick="TogglePasswordVisibility"
+                          Variant="Variant.Outlined"
+                          Immediate="true"
+                          Disabled="_loading"
+                          Class="auth-field" />
+
+            <div class="auth-link-row">
+                <MudLink Href="/forgot-password?scope=system" Class="auth-link">@trgma.ForgotPassword</MudLink>
+            </div>
+
+            <MudButton ButtonType="ButtonType.Submit"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       FullWidth="true"
+                       Disabled="_loading"
+                       StartIcon="@(_loading ? null : Icons.Material.Outlined.Login)"
+                       Class="auth-primary-button">
+                @if (_loading)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+                    @trgma.SigningIn
+                }
+                else
+                {
+                    @trgma.Login
+                }
+            </MudButton>
+        </EditForm>
+    }
+    else if (!_otpSent)
+    {
+        <EditForm Model="_otpModel" OnSubmit="RequestOtpAsync">
+            <MudTextField @bind-Value="_otpModel.Email"
+                          Label="@trgma.SystemEmail"
+                          Placeholder="name@domain.com"
+                          HelperText="@trgma.OTPHelperText"
+                          InputType="InputType.Email"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Outlined.AlternateEmail"
+                          Variant="Variant.Outlined"
+                          Immediate="true"
+                          Disabled="_loading"
+                          Class="auth-field" />
+
+            <MudButton ButtonType="ButtonType.Submit"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       FullWidth="true"
+                       Disabled="_loading"
+                       StartIcon="@(_loading ? null : Icons.Material.Outlined.MarkEmailUnread)"
+                       Class="auth-primary-button mt-2">
+                @if (_loading)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+                    @trgma.SendingOTP
+                }
+                else
+                {
+                    @trgma.SendOTP
+                }
+            </MudButton>
+        </EditForm>
+    }
+    else
+    {
+        <div class="auth-context-card">
+            <MudIcon Icon="@Icons.Material.Outlined.MarkEmailRead" />
+            <div>
+                <span>@trgma.OtpSentTo(_otpModel.Email)</span>
+                <strong>@trgma.EnterOTP</strong>
+            </div>
+        </div>
+
+        <EditForm Model="_otpModel" OnSubmit="VerifyOtpAsync">
+            <MudTextField @bind-Value="_otpModel.Code"
+                          Label="@trgma.EnterOTP"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Outlined.Pin"
+                          Variant="Variant.Outlined"
+                          Immediate="true"
+                          Disabled="_loading"
+                          MaxLength="6"
+                          Class="auth-field" />
+
+            <div class="auth-link-row">
+                <MudLink OnClick="ResetOtpFlow" Class="auth-link">@trgma.UseDifferentEmail</MudLink>
+            </div>
+
+            <MudButton ButtonType="ButtonType.Submit"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       FullWidth="true"
+                       Disabled="_loading"
+                       StartIcon="@(_loading ? null : Icons.Material.Outlined.VerifiedUser)"
+                       Class="auth-primary-button">
+                @if (_loading)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+                    @trgma.Verifying
+                }
+                else
+                {
+                    @trgma.VerifyAndLogin
+                }
+            </MudButton>
+        </EditForm>
+    }
+
+    <MudButton Href="/onboarding"
+               Variant="Variant.Text"
+               Color="Color.Primary"
+               FullWidth="true"
+               StartIcon="@Icons.Material.Outlined.ArrowBack"
+               Class="auth-secondary-button mt-3">
+        @trgma.BackToCompanyLogin
+    </MudButton>
+}
+
+@code {
+    private readonly PasswordLoginModel _passwordModel = new();
+    private readonly OtpLoginModel _otpModel = new();
+    private bool _checkingSession = true;
+    private bool _useOtp;
+    private bool _otpSent;
+    private bool _loading;
+    private bool _showPassword;
+
+    protected override void OnInitialized() => _localizer.InitLocalizedComponent(this);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await Session.InitializeAsync();
+        if (Session.IsAuthenticated && Session.IsInRole("SuperAdmin"))
+        {
+            _nav.NavigateTo("/superadmin/dashboard");
+            return;
+        }
+
+        _checkingSession = false;
+        StateHasChanged();
+    }
+
+    private void UsePasswordMode()
+    {
+        _useOtp = false;
+        _otpSent = false;
+    }
+
+    private void UseOtpMode() => _useOtp = true;
+    private void TogglePasswordVisibility() => _showPassword = !_showPassword;
+
+    private async Task LoginWithPasswordAsync()
+    {
+        if (_loading)
+            return;
+        if (string.IsNullOrWhiteSpace(_passwordModel.Email))
+        {
+            await _msg.PublishErrors(trgma.PleaseEnterEmail);
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(_passwordModel.Password))
+        {
+            await _msg.PublishErrors(trgma.PleaseEnterPassword);
+            return;
+        }
+
+        _loading = true;
+        try
+        {
+            var result = await _api.PostAsync<AuthResponseDto, LoginDto>(
+                "api/Authentication/Login",
+                new LoginDto
+                {
+                    Email = _passwordModel.Email.Trim(),
+                    Password = _passwordModel.Password,
+                    CompanyCode = string.Empty
+                },
+                trgma.FailedTo);
+            if (!result.Success || result.Data is null)
+                return;
+
+            await Session.SignInAsync(result.Data.Token, result.Data.RefreshToken);
+            if (!Session.IsInRole("SuperAdmin"))
+            {
+                await Session.SignOutAsync();
+                await _msg.PublishErrors(trgma.AccessDenied);
+                return;
+            }
+
+            _nav.NavigateTo("/superadmin/dashboard");
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task RequestOtpAsync()
+    {
+        if (_loading)
+            return;
+        if (string.IsNullOrWhiteSpace(_otpModel.Email))
+        {
+            await _msg.PublishErrors(trgma.PleaseEnterEmail);
+            return;
+        }
+
+        _loading = true;
+        try
+        {
+            var result = await _api.PostAsync<object, OtpRequestDto>(
+                "api/Authentication/Login/Otp",
+                new OtpRequestDto { Email = _otpModel.Email.Trim() },
+                trgma.FailedTo);
+            if (result.Success)
+            {
+                _otpSent = true;
+                await _msg.NotifySuccess(trgma.OtpSentSuccessfully);
+            }
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task VerifyOtpAsync()
+    {
+        if (_loading)
+            return;
+        if (string.IsNullOrWhiteSpace(_otpModel.Code))
+        {
+            await _msg.PublishErrors(trgma.PleaseEnterOtp);
+            return;
+        }
+
+        _loading = true;
+        try
+        {
+            var result = await _api.PostAsync<AuthResponseDto, OtpVerifyDto>(
+                "api/Authentication/Login/Verify",
+                new OtpVerifyDto
+                {
+                    Email = _otpModel.Email.Trim(),
+                    Otp = _otpModel.Code.Trim()
+                },
+                trgma.FailedTo);
+            if (!result.Success || result.Data is null)
+                return;
+
+            await Session.SignInAsync(result.Data.Token, result.Data.RefreshToken);
+            await _msg.NotifySuccess(trgma.LoginSuccessfulRedirecting);
+            _nav.NavigateTo("/superadmin/dashboard");
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void ResetOtpFlow()
+    {
+        _otpSent = false;
+        _otpModel.Code = string.Empty;
+    }
+
+    private sealed class PasswordLoginModel
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+
+    private sealed class OtpLoginModel
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+    }
+}

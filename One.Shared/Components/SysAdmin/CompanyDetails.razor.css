@@ -1,0 +1,30 @@
+.company-details-page {
+    max-width: 96rem;
+}
+
+.company-hero,
+.subscription-card,
+.details-panel {
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 1rem;
+}
+
+.company-hero {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--mud-palette-primary) 8%, transparent), transparent 65%);
+}
+
+.details-panel {
+    height: 100%;
+}
+
+@media (max-width: 760px) {
+    .company-hero-content,
+    .company-hero-actions,
+    .subscription-heading,
+    .permission-editor-heading,
+    .permission-actions {
+        align-items: stretch !important;
+        flex-direction: column !important;
+        gap: .75rem;
+    }
+}

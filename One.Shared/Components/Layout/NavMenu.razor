@@ -1,0 +1,102 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using One.Domain.DTOs.Identity
+@using One.Shared.Services
+@inject EffectivePermissionState PermissionState
+@inject One.Shared.Services.Session.IClientSession Session
+@inject NavigationManager Nav
+@implements IDisposable
+
+<MudNavMenu Dense="true" Class="pa-2">
+    <AuthorizeView>
+        <NotAuthorized>
+            <MudNavLink Href="/login" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Login">
+                @loc["Login"]
+            </MudNavLink>
+        </NotAuthorized>
+        <Authorized>
+            @if (_loading)
+            {
+                <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="my-2" />
+            }
+            else if (PermissionState.Current?.Navigation.Count > 0)
+            {
+                @foreach (var module in PermissionState.Current.Navigation)
+                {
+                    <MudNavGroup Title="@loc[module.NameResourceKey]"
+                                 Icon="@ModuleIcon(module.Key)"
+                                 Expanded="@IsModuleOpen(module)">
+                        @foreach (var navPage in module.Pages)
+                        {
+                            <MudNavLink Href="@navPage.Route"
+                                        Match="@(navPage.Route == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)"
+                                        Icon="@PageIcon(navPage.Key)">
+                                @loc[navPage.NameResourceKey]
+                            </MudNavLink>
+                        }
+                    </MudNavGroup>
+                }
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info" Dense="true" Class="ma-2">
+                    @loc["NoNavigationPermissions"]
+                </MudAlert>
+            }
+        </Authorized>
+    </AuthorizeView>
+</MudNavMenu>
+
+@code {
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _localizer.InitLocalizedComponent(this);
+        PermissionState.Changed += OnPermissionChanged;
+        await Session.InitializeAsync();
+        if (!Session.IsAuthenticated)
+        {
+            _loading = false;
+            return;
+        }
+
+        await PermissionState.RefreshAsync();
+        _loading = false;
+    }
+
+    private bool IsModuleOpen(NavigationModuleDto module)
+        => module.Pages.Any(navPage =>
+            navPage.Route == "/"
+                ? Nav.ToBaseRelativePath(Nav.Uri).Length == 0
+                : Nav.Uri.Contains(navPage.Route, StringComparison.OrdinalIgnoreCase));
+
+    private static string ModuleIcon(string key) => key switch
+    {
+        "SystemAdministration" => Icons.Material.Filled.AdminPanelSettings,
+        "CompanyAdministration" => Icons.Material.Filled.ManageAccounts,
+        "Sales" => Icons.Material.Filled.PointOfSale,
+        "Inventory" => Icons.Material.Filled.Inventory,
+        _ => Icons.Material.Filled.Apps
+    };
+
+    private static string PageIcon(string key) => key switch
+    {
+        var value when value.EndsWith("Dashboard", StringComparison.Ordinal) => Icons.Material.Filled.Dashboard,
+        var value when value.EndsWith("Companies", StringComparison.Ordinal) => Icons.Material.Filled.Business,
+        var value when value.EndsWith("ErrorLogs", StringComparison.Ordinal) => Icons.Material.Filled.BugReport,
+        var value when value.EndsWith("SystemHealth", StringComparison.Ordinal) => Icons.Material.Filled.MonitorHeart,
+        var value when value.EndsWith("SubscriptionPlans", StringComparison.Ordinal) => Icons.Material.Filled.CardMembership,
+        var value when value.EndsWith("Users", StringComparison.Ordinal) => Icons.Material.Filled.PeopleAlt,
+        var value when value.EndsWith("RegisterUser", StringComparison.Ordinal) => Icons.Material.Filled.PersonAdd,
+        var value when value.EndsWith("Invoices", StringComparison.Ordinal) => Icons.Material.Filled.RequestQuote,
+        var value when value.EndsWith("Orders", StringComparison.Ordinal) => Icons.Material.Filled.ReceiptLong,
+        var value when value.EndsWith("Brands", StringComparison.Ordinal) => Icons.Material.Filled.Category,
+        var value when value.EndsWith("Branches", StringComparison.Ordinal) => Icons.Material.Filled.Store,
+        var value when value.EndsWith("Warehouses", StringComparison.Ordinal) => Icons.Material.Filled.Warehouse,
+        _ => Icons.Material.Filled.ChevronRight
+    };
+
+    private void OnPermissionChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => PermissionState.Changed -= OnPermissionChanged;
+}

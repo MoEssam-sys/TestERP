@@ -1,0 +1,423 @@
+Welcome: "Welcome, {username}!"
+RegisteredSuccessfully: Registered Successfully
+Save: Save
+Update: Update
+Delete: Delete
+Clear: Clear
+Navigation: Navigation
+Dashboard: Dashboard
+Servers: Servers
+Sales: Sales
+Purchases: Purchases
+Warehouse: Warehouse
+HR: HR
+Accounting: Accounting
+Settings: Settings
+About: About
+Orders: Orders
+Invoices: Invoices
+Customers: Customers
+Returns: Returns
+PurchaseOrders: Purchase Orders
+Vendors: Vendors
+Bills: Bills
+Items: Items
+Stock: Stock
+Movements: Movements
+Adjustments: Adjustments
+Transfers: Transfers
+Employees: Employees
+Attendance: Attendance
+Payroll: Payroll
+JournalEntries: Journal Entries
+ChartOfAccounts: Chart Of Accounts
+Reports: Reports
+TrialBalance: Trial Balance
+Users: Users
+Security: Security
+Company: Company
+Taxes: Taxes
+Numbering: Numbering
+PageNotFound: Page Not Found
+ChangeStyle: Change Style
+LogOut: LogOut
+OpenCloseDrawer: Open/Close Drawer
+Apply: Apply
+SalesDashboard: Sales Dashboard
+SalesLast12Weeks: Sales Last 12 Weeks
+RecentInvoices: Recent Invoices
+Number: Number
+Customer: Customer
+Date: Date
+Total: Total
+Status: Status
+TotalSalesMonth: Total Sales Month
+UnpaidInvoices: Unpaid Invoices
+OpenOrders: Open Orders
+LowStockAlerts: Low Stock Alerts
+Week: Week
+NewOrder: New Order
+Search: Search
+Open: Open
+Closed: Closed
+Cancelled: Cancelled
+DateRange: Date Range
+Resource: "Resource, {Status}"
+OrderDetails: OrderDetails
+Item: Item
+Qty: Qty
+Price: Price
+Paid: Paid
+Unpaid: Unpaid
+Loading: Loading
+InvoiceDetails: Invoice Details
+Notes: Notes
+InvoiceLines: Invoice Lines
+Invoice: Invoice
+Brands: Brands
+Branches: Branches
+Details: Details
+Code: Code
+Name: Name
+Active: Active
+Inactive: Inactive
+Create: Create
+Saving: Saving
+Cancel: Cancel
+BrandsList: Brands List
+SearchByCodeOrName: Search By Code Or Name
+Address: Address
+FailedToLoadData: Failed To Load Data
+SearchFailed: Search Failed
+UnExpectedError: Un Expected Error
+PleaseCompleteTheRequiredFields: Please Complete The Required Fields
+FailedToUpdateActiveState: Failed To Update Active State
+Brand: Brand
+UpdateFailed: Update Failed
+CreationFailed: Creation Failed
+DeleteFailed: Delete Failed
+UnexpectedErrorOccurred: Unexpected Error Occurred
+TryAgain: Try Again
+CreatedSuccessfully: Created Successfully
+UpdatedSuccessfully: Updated Successfully
+DeletedSuccessfully: Deleted Successfully
+NotFound: Not Found
+IsRequired: Is Required
+AlreadyExists: Already Exists
+ErrorIn: "Error In"
+FailedTo: "Failed To"
+Warning: Warning
+DoYouWantToDeleteThisItem: Do You Want To Delete This Item
+Yes: Yes
+SuperAdminDashboard: Super Admin Dashboard
+OverviewRegisterCompaniesAndStats: Overview of all registered companies and system stats.
+LoadingDashboardData: Loading dashboard data...
+FailedToLoadDashboard: Failed to load dashboard
+TotalCompanies: Total Companies
+TotalUsers: Total Users
+TotalAdmins: Total Admins
+ManageCompanies: Manage Companies
+NoCompaniesFound: No companies found matching your search.
+ViewDetails: View Details
+AddUser: Add User
+SearchCompanyPlaceholder: Search Company Name or Code...
+CompanyNotFound: Company not found.
+BackToDashboard: Back to Dashboard
+RegisteredUsers: Registered Users
+UserName: User Name
+FullName: Full Name
+Email: Email
+Roles: Roles
+Actions: Actions
+DebugCompanies: "Debug: Companies"
+ID: ID
+CreateNewCompany: Create New Company
+CreateAdmin: Create Admin
+WelcomeToOneERP: Welcome to OneERP
+EnterCompanyCodeToContinue: Please enter your Company Code to continue.
+Checking: Checking...
+Continue: Continue
+CompanyCode: Company Code
+Login: Login
+Administration: Administration
+ManageUsers: Manage Users
+CompanyAdmin: Company Admin
+TargetCompanyID: Target Company ID
+Role: Role
+Username: Username
+Password: Password
+FirstName: First Name
+LastName: Last Name
+ConfirmPassword: Confirm Password
+SuperAdminEmail: Super Admin Email
+OTPHelperText: We'll send a 6-digit OTP code (valid for 5 minutes).
+EnterOTP: Enter OTP
+SearchUserPlaceholder: Search by name or email...
+FilterByCompany: Filter by Company
+EditComingSoon: Edit (Coming Soon)
+DisableUser: Disable User
+EnableUser: Enable User
+Stocks: Stocks
+UsersManagement: Users Management
+ManageUsersDescription: Manage users, roles, and access.
+LoadingUsers: Loading users...
+FailedToLoadUsers: Failed to load users
+Retry: Retry
+AllCompanies: All Companies
+NoUsersFound: No users found.
+UserStatusUpdatedSuccessfully: User status updated successfully!
+FailedToUpdateStatus: Failed to update status
+SwitchToEnglish: Switch to English
+SwitchToArabic: Switch to Arabic
+LoggedOutSuccessfully: Logged Out Successfully
+SuperAdminLogin: Super Admin Login
+SearchUsersPlaceholder: Search by name or email...
+CheckingSession: Checking session...
+EnterEmailForOtp: Enter Email for OTP
+SendingOTP: Sending OTP...
+SendOTP: Send OTP
+OtpSentTo: OTP sent to {email}
+UseDifferentEmail: Use a different email
+Verifying: Verifying...
+VerifyAndLogin: Verify & Login
+BackToOnboarding: Back to Onboarding
+PleaseEnterEmail: Please enter email
+OtpSentSuccessfully: OTP sent successfully
+PleaseEnterOtp: Please enter OTP
+LoginSuccessfulRedirecting: Login successful, redirecting...
+Admins: Admins
+RegisterNewUser: Register New User
+CreateNewUserDescription: Create a new user account.
+Registering: Registering...
+CreateUser: Create User
+ErrorCouldNotDetermineCompanyContext: "Error: Could not determine company context."
+CompanyIdIsRequired: Company ID is required.
+RegistrationFailed: Registration Failed
+UserCreatedSuccessfully: User created successfully!
+SetupAdminAccount: Setup Admin Account
+RegisterFirstAdminDescription: Register the first admin for the company.
+PasswordsDoNotMatch: Passwords do not match
+AdminCreatedSuccessfullyPleaseLogin: Admin created successfully. Please login.
+Warehouses: Warehouses
+LoggingInto: Logging into
+ChangeCompany: Change Company
+UserLoggedInSuccessfully: User logged in successfully
+LoginAsSuperAdmin: Login as Super Admin
+PleaseEnterCompanyCode: Please enter Company Code
+SkipToContent: Skip to content
+AuthProductTagline: Unified business operating system
+AuthHeroTitle: Your entire company, in one workspace.
+AuthHeroDescription: Run sales, inventory, teams, and permissions through one consistent experience across web, desktop, and mobile.
+AuthAvailableEverywhere: Available platforms
+AuthPlatformWeb: Web
+AuthPlatformDesktop: Desktop
+AuthPlatformMobile: Android
+AuthTenantTitle: Isolated data
+AuthTenantDescription: A secure, independent space for every company.
+AuthPermissionTitle: Precise permissions
+AuthPermissionDescription: Every user sees only what they need.
+AuthSecurityNote: Encrypted connection and policy-protected session
+AuthFooter: One consistent experience for every team
+SelectWorkspace: Select your company workspace
+SelectWorkspaceDescription: Enter the company code to continue to your team's secure portal.
+CompanyCodePlaceholder: Example — CT1
+CompanyCodeHelper: Your company administrator provides this code.
+ContinueToWorkspace: Continue to workspace
+SystemAdministrator: Platform administration
+SystemAdministratorDescription: Dedicated access for the primary administrator to manage companies and plans.
+EmployeeLogin: Welcome back
+EmployeeLoginDescription: Enter your account details to access your company workspace.
+UsernameOrEmail: Username or email
+UsernameOrEmailPlaceholder: Enter username or email
+ForgotPassword: Forgot password?
+ShowPassword: Show password
+HidePassword: Hide password
+SignInToWorkspace: Sign in to workspace
+SigningIn: Signing in...
+SelectedWorkspace: Selected workspace
+PleaseEnterUsernameOrEmail: Enter your username or email.
+PleaseEnterPassword: Enter your password.
+ForgotPasswordTitle: Recover your password
+ForgotPasswordDescription: We will send a short-lived secure link to the email registered with your account.
+RegisteredEmail: Registered email
+SendResetLink: Send recovery link
+SendingResetLink: Sending link...
+ResetLinkSentTitle: Check your inbox
+ResetLinkSentDescription: If the account is eligible, an email with a short-lived recovery link will arrive shortly.
+BackToLogin: Back to sign in
+ResetPasswordTitle: Set a new password
+ResetPasswordDescription: Choose a strong password that is different from previous passwords.
+NewPassword: New password
+ResetPasswordAction: Save new password
+ResettingPassword: Saving password...
+PasswordResetDoneTitle: Password changed
+PasswordResetDoneDescription: You can now sign in with your new credentials. Existing sessions were ended to protect the account.
+InvalidResetLink: This recovery link is invalid or expired. Request a new link.
+PasswordRequirements: Use at least 8 characters with upper and lowercase letters, a number, and a symbol.
+SuperAdminPortal: Platform administration portal
+SuperAdminPortalDescription: Primary administrator access by password or email verification code.
+PasswordLogin: Password
+EmailCodeLogin: Email code
+SystemEmail: Platform administrator email
+BackToCompanyLogin: Back to company sign in
+ProtectedAccess: Protected and monitored administrative access
+CreatedOn: Created On
+DisableCompany: Disable Company
+EnableCompany: Enable Company
+ConfirmAction: Confirm Action
+ConfirmEnableCompany: Are you sure you want to enable this company?
+ConfirmDisableCompany: Are you sure you want to disable this company?
+CompanyEnabledSuccessfully: Company enabled successfully!
+CompanyDisabledSuccessfully: Company disabled successfully!
+FailedToUpdateCompanyStatus: Failed to update company status
+EnterNameAndCode: Enter Name and Code
+RegisterUser: Register User
+CatalogModuleSystemAdministration: System Administration
+CatalogModuleCompanyAdministration: Company Administration
+CatalogModuleGeneral: General
+CatalogModuleSales: Sales
+CatalogModuleInventory: Inventory
+CatalogPageCompanyDetails: Company Details
+CatalogPageRegisterAdmin: Register Company Administrator
+CatalogPermissionView: View
+CatalogPermissionCreate: Create
+CatalogPermissionUpdate: Update
+CatalogPermissionDelete: Delete
+CatalogPermissionActivate: Activate
+CatalogPermissionExport: Export
+CatalogPermissionApprove: Approve
+SubscriptionPlans: Subscription Plans
+SubscriptionPlansDescription: Define pricing, duration, and page-level permissions for company subscriptions.
+CreatePlan: Create Plan
+EditPlan: Edit Plan
+PlanName: Plan Name
+Description: Description
+Duration: Duration
+DurationInDays: Duration in Days
+Days: days
+Currency: Currency
+Permissions: Permissions
+PlanPermissions: Plan Permissions
+PlanPermissionsHint: Select the allowed actions for every page included in this plan.
+NoPlansFound: No subscription plans have been created yet.
+FailedToLoadPlans: Failed to load subscription plans.
+FailedToLoadPermissions: Failed to load the permission catalog.
+FailedToSavePlan: Failed to save the subscription plan.
+SelectAtLeastOnePermission: Select at least one permission.
+SelectAll: Select All
+ClearSelection: Clear Selection
+SelectPage: Select Page
+ActivatePlan: Activate Plan
+DeactivatePlan: Deactivate Plan
+ConfirmActivatePlan: Are you sure you want to activate this plan?
+ConfirmDeactivatePlan: Are you sure you want to deactivate this plan? Existing subscriptions will not change.
+CompaniesAndSubscriptions: Companies and Subscriptions
+CreateCompanyWithSubscription: Create Company and Subscription
+CompanyCreationDescription: Create the company, subscription, permissions, and first administrator in one transaction.
+CompanyInformation: Company Information
+SubscriptionInformation: Subscription Information
+AdministratorInformation: First Administrator
+SelectPlan: Select Subscription Plan
+SubscriptionStartDate: Subscription Start Date
+SelectedPlanSummary: Selected Plan Summary
+CustomizeCompanyPermissions: Customize Company Permissions
+ResetToPlanPermissions: Reset to Plan Permissions
+PhoneNumber: Phone Number
+CreatingCompany: Creating Company...
+CompanyProvisionedSuccessfully: Company, subscription, and administrator created successfully.
+FailedToProvisionCompany: Failed to create the company and its subscription.
+PlanRequired: Select an active subscription plan.
+NoActivePlans: No active plans are available. Create or activate a plan first.
+CompanyDetails: Company Details
+CurrentSubscription: Current Subscription
+SubscriptionHistory: Subscription History
+Subscription: Subscription
+StartsOn: Starts On
+ExpiresOn: Expires On
+Entitlements: Entitlements
+AuditTrail: Audit Trail
+NoSubscriptionFound: This company does not have a subscription.
+SubscriptionExpiringSoon: This subscription will expire soon.
+CustomizedPermissions: Customized Permissions
+BasedOnPlanPermissions: Plan Permissions
+SubscriptionStatusPending: Pending
+SubscriptionStatusActive: Active
+SubscriptionStatusSuspended: Suspended
+SubscriptionStatusExpired: Expired
+SubscriptionStatusCancelled: Cancelled
+SubscriptionChangeCreated: Created
+SubscriptionChangeRenewed: Renewed
+SubscriptionChangeSuspended: Suspended
+SubscriptionChangeResumed: Resumed
+SubscriptionChangeCancelled: Cancelled
+SubscriptionChangeExpired: Expired
+SubscriptionChangeActivated: Activated
+SubscriptionChangeEntitlementsChanged: Permissions Changed
+AccessDenied: You are not authorized to access this page.
+PagePermissionDenied: Your account does not have permission to view this page, or the company subscription is inactive.
+NoNavigationPermissions: No pages are available for your current permissions.
+ManagePermissions: Manage permissions
+UserPermissions: User Permissions
+UserPermissionsDescription: Permissions are limited to the active company subscription.
+SavePermissions: Save Permissions
+PermissionsUpdatedSuccessfully: User permissions updated successfully.
+FailedToLoadUserPermissions: Failed to load user permissions.
+FailedToSaveUserPermissions: Failed to save user permissions.
+RestaurantsManagement: Restaurant Management
+RestaurantCreationDescription: Create restaurants, their first administrators, and module/page permissions from one place.
+CreateRestaurant: Add Restaurant
+RestaurantInformation: Restaurant Information
+RestaurantCode: Restaurant Code
+RestaurantDetails: Restaurant Details
+SearchRestaurantPlaceholder: Search by restaurant name or code
+NoRestaurantsFound: No restaurants were found.
+CustomizeRestaurantPermissions: Restaurant Module and Page Permissions
+RestaurantProvisionedSuccessfully: Restaurant, access, and first administrator created successfully.
+RestaurantNotFound: Restaurant was not found.
+EnableRestaurant: Enable Restaurant
+DisableRestaurant: Disable Restaurant
+ConfirmEnableRestaurant: Are you sure you want to enable this restaurant?
+ConfirmDisableRestaurant: Are you sure you want to disable this restaurant? Its users will lose access.
+RestaurantEnabledSuccessfully: Restaurant enabled successfully.
+RestaurantDisabledSuccessfully: Restaurant disabled successfully.
+RestaurantModulePermissions: Restaurant Modules and Pages
+FutureModulesPermissionHint: Newly added modules appear here automatically when they become assignable.
+EditPermissions: Edit Permissions
+FailedToSaveRestaurantPermissions: Failed to save restaurant permissions.
+RestaurantPermissionsSaved: Restaurant permissions saved successfully.
+ErrorLogs: Error Logs
+ErrorLogsDescription: Review company errors with request, user, source, and timestamp context.
+ErrorReference: Reference
+ErrorMessage: Error Message
+ErrorSeverity: Severity
+ErrorSource: Source
+ErrorFunction: Function
+ErrorLine: Line
+ErrorRoute: Page / Route
+OccurredAt: Occurred At
+LocalTime: Local Time
+UniversalTime: UTC Time
+AllRestaurants: All Restaurants
+AllSeverities: All Severities
+SearchErrorsPlaceholder: Search reference, message, restaurant, user, route, or function
+NoErrorLogsFound: No error logs match the selected filters.
+ErrorDetails: Error Details
+StackTrace: Stack Trace
+CorrelationId: Correlation ID
+Platform: Platform
+SystemHealth: System Health
+SystemHealthDescription: Live status for databases, active tenants, users, and recent errors.
+Healthy: Healthy
+Degraded: Degraded
+IdentityDatabase: Identity Database
+BusinessDatabase: Business Database
+ActiveRestaurants: Active Restaurants
+TotalRestaurants: Total Restaurants
+ActiveUsers: Active Users
+ErrorsLast24Hours: Errors in the Last 24 Hours
+LastChecked: Last Checked
+Refresh: Refresh
+Available: Available
+Unavailable: Unavailable
+FailedToLoadErrorLogs: Failed to load error logs.
+FailedToLoadSystemHealth: Failed to load system health.
